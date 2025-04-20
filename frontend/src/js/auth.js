@@ -1,3 +1,5 @@
+import {ModalManager} from "./modal.js";
+
 const backend = 'http://127.0.0.1:5000'
 export async function loginUser() {
     const loginForm = document.getElementById('login-form');
@@ -18,6 +20,8 @@ export async function loginUser() {
 
         if (res.ok) {
             console.log(`${username} Logged in`)
+            ModalManager.toggle('login-modal')
+            updateAuthUI(true)
         }
     })
 }
@@ -38,5 +42,21 @@ export async function checkSession() {
     }
     else {
         console.log('Not logged in')
+    }
+}
+
+function updateAuthUI(isLoggedIn) {
+    console.log("UPDATE AUTH")
+    const loginBtn = document.getElementById('login-btn');
+    const profileBtn = document.getElementById('profile-btn');
+
+    if (isLoggedIn) {
+
+        loginBtn.classList.add('hidden');
+        profileBtn.classList.remove('hidden');
+        // setupUploadForm()
+    } else {
+        loginBtn.classList.remove('hidden');
+        profileBtn.classList.add('hidden');
     }
 }
