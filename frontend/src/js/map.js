@@ -1,11 +1,15 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import droneIconUrl from '../assets/drone_icon.png';
 
 let map;
 let poiMarker = null;
 let droneMarker = null;
 let droneLatLng = L.latLng(37.7739, -122.4312); // Initial position near SF
 let droneMoveInterval = null;
+const log = document.getElementById('mission-log');
+
+
 
 export function initMap() {
     map = L.map('map').setView([37.7749, -122.4194], 13); // SF placeholder
@@ -43,11 +47,15 @@ export function initMap() {
         const missionType = missionTypeSelect.value;
         const coords = poiMarker.getLatLng();
 
-        console.log("🚀 Starting mission:", missionType, "at", coords);
-
+        log.innerHTML += `<div class="log-event">🚀 Starting mission:, ${missionType}, at ${coords}</div>`
+        let newLog = log.lastElementChild
+        if (newLog) {
+            newLog.scrollIntoView()
+        }
 
         // Sim logic.
         simulateDroneFlight(coords);
+
     });
 }
 
@@ -58,9 +66,10 @@ function simulateDroneFlight(destination) {
 
     droneMarker = L.marker(droneLatLng, {
         icon: L.icon({
-            iconUrl: '../drone-icon.png', // Replace
+            iconUrl: droneIconUrl, // drone-icon.png
             iconSize: [30, 30],
-            iconAnchor: [15, 15]
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -20]
         })
     }).addTo(map);
 
@@ -75,7 +84,7 @@ function simulateDroneFlight(destination) {
             clearInterval(droneMoveInterval);
             droneLatLng = destination;
             droneMarker.setLatLng(destination);
-            alert("📍 Drone has arrived at the POI!");
+            log.innerHTML += '<div class="log-event">"📍 Drone has arrived at the POI!"</div>'
             return;
         }
 
@@ -91,6 +100,14 @@ function simulateDroneFlight(destination) {
 function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
     const waypoints = [];
     const angleStep = 360 / points;
+    const droneIcon = L.marker(droneLatLng, {
+            icon: L.icon({
+            iconUrl: droneIconUrl, // drone-icon.png
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -20]
+        })
+    })
     const droneMarker = L.marker(poi, { icon: droneIcon }).addTo(map);
 
     // Generate waypoints around the POI in a circle
@@ -105,19 +122,18 @@ function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
     L.polyline(waypoints, { color: 'blue', dashArray: '4' }).addTo(map);
 
     // Log container
-    const log = document.getElementById('mission-log');
-    log.innerHTML = '<h3>🛰 Orbit Mission Log</h3>';
+    log.innerHTML = '<div class="log-event">🛰 Orbit Mission Log</div>';
 
     let i = 0;
     function moveDrone() {
         if (i >= waypoints.length) {
-            log.innerHTML += `<div>✅ Mission Complete</div>`;
+            log.innerHTML += `<div class="log-event">✅ Mission Complete</div>`;
             return;
         }
 
         const [lat, lng] = waypoints[i];
         droneMarker.setLatLng([lat, lng]);
-        log.innerHTML += `<div>📸 Photo captured at ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
+        log.innerHTML += `<div class="log-event">📸 Photo captured at ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
         log.scrollTop = log.scrollHeight;
 
         i++;
@@ -125,4 +141,34 @@ function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
     }
 
     moveDrone();
+}
+
+
+function generateGrid(center, width, height, rows, cols, angleDegrees = 0) {
+    const lat = center.lat;
+    const lng = center.lng;
+    const dLat = height / rows / 111111; // approx degrees per meter
+    const dLng = width / cols / (111111 * Math.cos(lat * (Math.PI / 180)));
+
+    const angle = angleDegrees * (Math.PI / 180);
+    const cosA = Math.cos(angle);
+    const sinA = Math.sin(angle);
+
+    const points = [];
+
+    for (let i = 0; i <= rows; i++) {
+        for (let j = 0; j <= cols; j++) {
+            // Grid relative coordinates
+            const dx = (j - cols / 2) * dLng;
+            const dy = (i - rows / 2) * dLat;
+
+            // Apply rotation
+            const rx = dx * cosA - dy * sinA;
+            const ry = dx * sinA + dy * cosA;
+
+            points.push([lat + ry, lng + rx]);
+        }
+    }
+
+    return points;
 }
