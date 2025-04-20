@@ -27,3 +27,16 @@ window.addEventListener('DOMContentLoaded', async () => {
         initMap();
     }
 });
+
+
+// close modal button listener
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('close-button')) {
+        const targetModalId = event.target.getAttribute('data-modal-target');
+        if (targetModalId) {
+            ModalManager.toggle(targetModalId);
+        } else {
+            console.warn("Close button missing data-modal-target attribute.");
+        }
+    }
+});
