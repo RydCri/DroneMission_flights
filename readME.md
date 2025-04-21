@@ -15,3 +15,13 @@ This component provides users of the webapp with tools to:
 </ul>
 <br>
 This application focuses on generating maps, orthomosaics, and photogrammetry (3D models) using FPV drones.
+<br>
+
+<br>
+<img style="height:400px;width:300px;" src="simScreenShot.png" alt="demo screen shot">
+<br>
+<i>Flight Mission Demo</i>
+<br>
+
+
+
