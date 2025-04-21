@@ -12,11 +12,6 @@ loginBtn.addEventListener('click', async () => {
         ModalManager.toggle('login-modal')
 });
 
-logoutBtn.addEventListener('click', async () => {
-    await logoutUser();
-    loginContainer.classList.remove('hidden');
-    mapContainer.classList.add('hidden');
-});
 
 window.addEventListener('DOMContentLoaded', async () => {
     await loginUser()
@@ -24,8 +19,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (user) {
         ModalManager.toggle('login-modal')
         ModalManager.toggle('map-container')
-        initMap();
     }
+        initMap();
 });
 
 
