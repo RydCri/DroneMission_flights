@@ -46,25 +46,31 @@ export function initMap() {
 
         const missionType = missionTypeSelect.value;
         const coords = poiMarker.getLatLng();
+        map.flyTo(coords, 18, { animate: true, duration: 1 });
 
-        log.innerHTML += `<div class="log-event">🚀 Starting mission:, ${missionType}, at ${coords}</div>`
-        let newLog = log.lastElementChild
-        if (newLog) {
-            newLog.scrollIntoView()
+
+        log.innerHTML += `<div class="log-event">🚀 Starting mission: ${missionType}, at ${coords}</div>`
+        log.scrollTop = log.scrollHeight;
+        if (missionType === 'orbit') {
+            orbitMission(coords)
+        }
+        if (missionType === 'double-grid-photo'){
+            startDoubleGridMission([coords.lat, coords.lng])
+        }
+        if (missionType === 'grid-photo'){
+            startSerpentineMission([coords.lat, coords.lng])
         }
 
-        // Sim logic.
-        simulateDroneFlight(coords);
 
     });
 }
 
-function simulateDroneFlight(destination) {
-    const stepSize = 0.0005; // Adjust this for speed
 
-    if (droneMarker) droneMarker.remove();
+function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
+    const waypoints = [];
+    const angleStep = 360 / points;
 
-    droneMarker = L.marker(droneLatLng, {
+    const droneMarker = L.marker(droneLatLng, {
         icon: L.icon({
             iconUrl: droneIconUrl, // drone-icon.png
             iconSize: [30, 30],
@@ -72,43 +78,6 @@ function simulateDroneFlight(destination) {
             popupAnchor: [0, -20]
         })
     }).addTo(map);
-
-    if (droneMoveInterval) clearInterval(droneMoveInterval);
-
-    droneMoveInterval = setInterval(() => {
-        const dx = destination.lat - droneLatLng.lat;
-        const dy = destination.lng - droneLatLng.lng;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < stepSize) {
-            clearInterval(droneMoveInterval);
-            droneLatLng = destination;
-            droneMarker.setLatLng(destination);
-            log.innerHTML += '<div class="log-event">"📍 Drone has arrived at the POI!"</div>'
-            return;
-        }
-
-        // Step toward POI
-        const stepLat = droneLatLng.lat + (dx / distance) * stepSize;
-        const stepLng = droneLatLng.lng + (dy / distance) * stepSize;
-        droneLatLng = L.latLng(stepLat, stepLng);
-        droneMarker.setLatLng(droneLatLng);
-    }, 50);
-}
-
-
-function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
-    const waypoints = [];
-    const angleStep = 360 / points;
-    const droneIcon = L.marker(droneLatLng, {
-            icon: L.icon({
-            iconUrl: droneIconUrl, // drone-icon.png
-            iconSize: [30, 30],
-            iconAnchor: [15, 15],
-            popupAnchor: [0, -20]
-        })
-    })
-    const droneMarker = L.marker(poi, { icon: droneIcon }).addTo(map);
 
     // Generate waypoints around the POI in a circle
     for (let i = 0; i < 360; i += angleStep) {
@@ -118,16 +87,19 @@ function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
         waypoints.push([lat, lng]);
     }
 
+
     // Draw the path for visualization
     L.polyline(waypoints, { color: 'blue', dashArray: '4' }).addTo(map);
 
-    // Log container
-    log.innerHTML = '<div class="log-event">🛰 Orbit Mission Log</div>';
+    // Log
+    log.innerHTML = '<div class="log-event">🛰 Orbit Mission Start</div>';
+    log.scrollTop = log.scrollHeight;
 
     let i = 0;
     function moveDrone() {
         if (i >= waypoints.length) {
-            log.innerHTML += `<div class="log-event">✅ Mission Complete</div>`;
+            log.innerHTML += `<div class="log-event">✅ Orbit Mission Complete</div>`;
+            log.scrollTop = log.scrollHeight;
             return;
         }
 
@@ -135,6 +107,11 @@ function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
         droneMarker.setLatLng([lat, lng]);
         log.innerHTML += `<div class="log-event">📸 Photo captured at ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
         log.scrollTop = log.scrollHeight;
+        L.circleMarker([lat, lng], {
+            radius: 4,
+            color: 'yellow',
+            fillOpacity: 0.6
+        }).addTo(map);
 
         i++;
         setTimeout(moveDrone, interval);
@@ -144,31 +121,135 @@ function orbitMission(poi, radius = 50, points = 12, interval = 1000) {
 }
 
 
-function generateGrid(center, width, height, rows, cols, angleDegrees = 0) {
-    const lat = center.lat;
-    const lng = center.lng;
-    const dLat = height / rows / 111111; // approx degrees per meter
-    const dLng = width / cols / (111111 * Math.cos(lat * (Math.PI / 180)));
+function generateSerpentineGrid(center, width, height, rows, cols, rotate = false) {
+    const lat = center[0];
+    const lng = center[1];
+    // Convert meters to degrees
+    const latMeter = 1 / 111111;
+    const lngMeter = 1 / (111111 * Math.cos(lat * Math.PI / 180));
 
-    const angle = angleDegrees * (Math.PI / 180);
-    const cosA = Math.cos(angle);
-    const sinA = Math.sin(angle);
+    let grid = [];
 
-    const points = [];
+    for (let i = 0; i < rows; i++) {
+        let row = [];
 
-    for (let i = 0; i <= rows; i++) {
-        for (let j = 0; j <= cols; j++) {
-            // Grid relative coordinates
-            const dx = (j - cols / 2) * dLng;
-            const dy = (i - rows / 2) * dLat;
+        for (let j = 0; j < cols; j++) {
+            let offsetLat = (i * height / rows) * latMeter;
+            let offsetLng = (j * width / cols) * lngMeter;
 
-            // Apply rotation
-            const rx = dx * cosA - dy * sinA;
-            const ry = dx * sinA + dy * cosA;
+            let pointLat, pointLng;
 
-            points.push([lat + ry, lng + rx]);
+            if (!rotate) {
+                pointLat = lat + offsetLat;
+                pointLng = lng + offsetLng;
+            } else {
+                pointLat = lat + offsetLng; // swap axis
+                pointLng = lng + offsetLat;
+            }
+
+            row.push([pointLat, pointLng]);
         }
+
+        // serpentine: reverse alternate rows
+        if (i % 2 !== 0) row.reverse();
+
+        grid.push(...row);
     }
 
-    return points;
+    return grid;
+}
+
+
+async function startDoubleGridMission(center) {
+    const grid1 = generateSerpentineGrid(center, 60, 60, 4, 4);
+    const grid2 = generateSerpentineGrid(center, 60, 60, 4, 4, true)
+        .map(([lat, lng]) => [lat + 0.0001, lng + 0.0001]); // slight offset
+    const pathPolyline = L.polyline([], { color: 'cyan', weight: 3 }).addTo(map);
+    const mission = [...grid1, ...grid2];
+    const droneMarker = L.marker(droneLatLng, {
+        icon: L.icon({
+            iconUrl: droneIconUrl, // drone-icon.png
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+            popupAnchor: [0, -20]
+        })
+    }).addTo(map);
+    droneMarker.setLatLng(droneLatLng);
+
+    await animateMissionPath(mission,pathPolyline);
+    droneMarker.remove()
+    log.innerHTML += "<div class='log-event'>✅ Double-grid mission complete!</div>";
+    log.scrollTop = log.scrollHeight;
+
+async function animateMissionPath(path,polyline,index = 0) {
+    for (let i = 0; i < path.length; i++) {
+        const [lat, lng] = path[i];
+        const nextPoint = path[index];
+        polyline.addLatLng(nextPoint);
+        index += 1
+        if (index > 16){
+            polyline = L.polyline([], { color: 'orange', weight: 3 }).addTo(map);
+            polyline.addLatLng(nextPoint);
+        }
+        L.circleMarker([lat, lng], {
+            radius: 4,
+            color: 'yellow',
+            fillOpacity: 0.6
+        }).addTo(map);
+
+        if(droneMarker){
+            droneMarker.setLatLng([lat, lng]);
+        }
+
+        log.innerHTML += `<div class="log-event">📸 Photo taken at ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
+        log.scrollTop = log.scrollHeight;
+        await delay(1000);
+    }
+}
+}
+async function startSerpentineMission(center) {
+    const grid = generateSerpentineGrid(center, 60, 60, 4, 6); // 4 rows, 6 cols
+
+    const gridLine = L.polyline(grid, {
+        color: 'cyan',
+        weight: 3,
+        opacity: 0.8,
+        dashArray: '6, 6'
+    }).addTo(map);
+
+
+    if (!window.droneMarker) {
+        const droneIcon = L.icon({
+            iconUrl: droneIconUrl,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+        });
+        window.droneMarker = L.marker(grid[0], { icon: droneIcon }).addTo(map);
+    }
+
+    // Fly the grid
+    for (let i = 0; i < grid.length; i++) {
+        const [lat, lng] = grid[i];
+        window.droneMarker.setLatLng([lat, lng]);
+
+        // Simulate photo capture
+        L.circleMarker([lat, lng], {
+            radius: 4,
+            color: 'yellow',
+            fillOpacity: 0.6
+        }).addTo(map);
+
+        log.innerHTML += `<div class='log-event'>📸 Photo ${i + 1} at ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
+        log.scrollTop = log.scrollHeight;
+
+        await delay(1000);
+    }
+
+    log.innerHTML += "<div class='log-event'>✅ Serpentine 2D mission complete.</div>";
+    log.scrollTop = log.scrollHeight;
+
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
