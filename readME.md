@@ -19,7 +19,7 @@ Your Drone will be connected by 900MHz or 2.4GHz RF to your ground station devic
 <br>
 The application's focus is on generating maps, orthomosaics, and photogrammetry using FPV and gimbal camera drones.
 <br>
-<img style="height:400px;width:300px;" src="simScreenShot.png" alt="demo screen shot">
+<img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
 <br>
 <i>Flight Mission Demo</i>
 <br>
