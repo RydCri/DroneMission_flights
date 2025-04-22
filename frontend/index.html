@@ -96,6 +96,65 @@
         </form>
     </div>
 </div>
+<div id="waypointTree" class="p-4 w-full max-w-md bg-white rounded-2xl shadow-xl absolute overflow-y-auto">
+    <h2 class="text-xl font-bold mb-4">Mission Waypoints</h2>
+    <ul class="space-y-2" id="missionList">
+        <!-- Missions injected here -->
+    </ul>
+</div>
+
+<script>
+    const missions = [
+        {
+            id: 1,
+            name: "Orbit around POI",
+            waypoints: [
+                { id: 1, altitude: 50, speed: 5, action: "Photo" },
+                { id: 2, altitude: 50, speed: 5, action: "Photo" },
+            ]
+        },
+        {
+            id: 2,
+            name: "Grid Area Scan",
+            waypoints: [
+                { id: 1, altitude: 40, speed: 3, action: "Start Video" },
+                { id: 2, altitude: 40, speed: 3, action: "Stop Video" },
+            ]
+        }
+    ];
+
+    function renderWaypointTree() {
+        const list = document.getElementById("missionList");
+        list.innerHTML = "";
+
+        missions.forEach(mission => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+      <details class="group">
+        <summary class="cursor-pointer font-semibold text-blue-700">${mission.name}</summary>
+        <ul class="ml-4 mt-2 space-y-1">
+          ${mission.waypoints.map(wp => `
+            <li class="pl-2 border-l-2 border-blue-300 text-sm">
+              <button onclick="openWaypointEditor(${wp.id - 1})" class="hover:underline">
+                Waypoint ${wp.id} — Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}
+              </button>
+            </li>
+          `).join('')}
+        </ul>
+      </details>
+    `;
+            list.appendChild(li);
+        });
+    }
+
+    renderWaypointTree();
+</script>
+
+<style>
+    #waypointTree {
+        max-height: 80vh;
+    }
+</style>
 
 <script type="module" src="src/main.js"></script>
 </body>
