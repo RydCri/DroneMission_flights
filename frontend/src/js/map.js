@@ -36,7 +36,7 @@ function initMapControls(map) {
     // Map/Satellite Toggle
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "🗺 Map View";
-    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-40";
+    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm active:border hover:cursor-pointer w-40";
 
     toggleBtn.addEventListener("click", () => {
         const current = map.getMapTypeId();
@@ -52,7 +52,7 @@ function initMapControls(map) {
     // 📍 My Location Button
     const mylocationBtn = document.createElement("button");
     mylocationBtn.textContent = "📍 My Location";
-    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-40";
+    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 active:border text-sm hover:cursor-pointer w-40";
 
     mylocationBtn.addEventListener("click", () => {
         if (navigator.geolocation) {
@@ -90,7 +90,7 @@ function initMapControls(map) {
 
     const liveTrackBtn = document.createElement("button");
     liveTrackBtn.textContent = "📡 Start Tracking";
-    liveTrackBtn.className = "px-3 py-1 text-white rounded bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-sm hover:cursor-pointer";
+    liveTrackBtn.className = "px-3 py-1 text-white rounded bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 active:border text-sm hover:cursor-pointer";
 
     function startTracking(map) {
         if (watchId) return;
@@ -182,13 +182,13 @@ function initMapControls(map) {
 
     const missionBtn = document.createElement('button')
     const missionUI = document.getElementById('mission-controls')
-    missionBtn.textContent = 'Build Mission'
-    missionBtn.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white rounded text-sm hover:cursor-pointer";
+    missionBtn.textContent = 'Build Mission ⇕ '
+    missionBtn.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white active:border rounded text-sm hover:cursor-pointer";
     missionBtn.id = 'mission-toggle'
     const wpTree = document.getElementById('waypointTree')
     const wpTreeToggle = document.createElement('button')
-    wpTreeToggle.textContent = 'Waypoints'
-    wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white rounded text-sm hover:cursor-pointer";
+    wpTreeToggle.textContent = 'Waypoints ⇕ '
+    wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white active:border rounded text-sm hover:cursor-pointer";
     wpTreeToggle.id = 'mission-toggle'
     // Append buttons
     controlDiv.appendChild(toggleBtn);
