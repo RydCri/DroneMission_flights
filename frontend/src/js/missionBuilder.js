@@ -286,8 +286,7 @@ function openWaypointEditor(index) {
         wp.meta.speed = parseFloat(document.getElementById("edit-speed").value);
         wp.meta.action = document.getElementById("edit-action").value;
         wp.meta.gimbal = parseFloat(document.getElementById("edit-gimbal").value);
-
-        // Optional: update tooltip or styling
+        // Set marker
         wp.marker.setTitle(`Waypoint ${index + 1} - ${wp.meta.action}`);
     });
         // Close modal
