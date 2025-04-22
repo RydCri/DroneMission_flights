@@ -34,7 +34,7 @@ function initMapControls(map) {
     // Map/Satellite Toggle
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "🗺 Map View";
-    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-full";
+    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-50";
 
     toggleBtn.addEventListener("click", () => {
         const current = map.getMapTypeId();
@@ -50,7 +50,7 @@ function initMapControls(map) {
     // 📍 My Location Button
     const mylocationBtn = document.createElement("button");
     mylocationBtn.textContent = "📍 My Location";
-    mylocationBtn.className = "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm hover:cursor-pointer w-full";
+    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-50";
 
     mylocationBtn.addEventListener("click", () => {
         if (navigator.geolocation) {
@@ -178,12 +178,19 @@ function initMapControls(map) {
         }
     });
 
-
-
+    const missionBtn = document.createElement('button')
+    const missionUI = document.getElementById('mission-controls')
+    missionBtn.textContent = 'Build Mission'
+    missionBtn.className = "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm hover:cursor-pointer";
+    missionBtn.id = 'mission-toggle'
     // Append buttons
     controlDiv.appendChild(toggleBtn);
     controlDiv.appendChild(mylocationBtn);
     controlDiv.appendChild(liveTrackBtn);
+    controlDiv.appendChild(missionBtn)
+    missionBtn.addEventListener('click', () => {
+        missionUI.classList.toggle('mission-open')
+    });
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
 }
 
