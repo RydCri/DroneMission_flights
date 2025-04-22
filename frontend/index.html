@@ -10,48 +10,93 @@
 <body class="">
 <div id="map" class="w-full h-screen absolute inset-0 z-0 overflow-visible"></div>
 
-<!-- Control Panel -->
-<div class="absolute top-4 left-4 z-10 bg-white p-4 rounded-2xl shadow-xl w-72 space-y-4">
-    <h2 class="text-xl font-semibold">Mission Planner</h2>
-            <label for="mission-type" class="block mb-1 text-sm font-semibold">Mission Type</label>
-            <select id="mission-type" class="p-2 border rounded w-full text-sm">
+    <!-- Sidebar: Mission Config Panel -->
+    <div id="mission-controls">
+        <h2 class="text-lg font-semibold">Mission Setup</h2>
+
+        <div>
+            <label class="text-sm font-medium">Selected POI</label>
+            <div id="poi-coords" class="text-xs text-gray-600">Click on the map</div>
+        </div>
+
+        <div>
+            <label for="missionType" class="block text-sm font-medium">Mission Type</label>
+            <select id="missionType" class="w-full border p-2 rounded">
                 <option value="orbit">Orbit</option>
                 <option value="grid">Grid</option>
-                <option value="linear">Linear</option>
+                <!-- Add more in future -->
             </select>
+        </div>
 
-    <div id="mission-controls" class="absolute top-4 left-4 z-10 bg-white shadow-lg rounded p-4 w-72 space-y-3">
-        <h2 class="text-lg font-semibold">Mission Builder</h2>
+        <div id="orbit-config" class="space-y-2">
+            <div>
+                <label class="block text-sm font-medium">Number of Orbits</label>
+                <input type="number" id="orbitCount" value="1" min="1" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Orbit Radius (m)</label>
+                <input type="number" id="orbitRadius" value="50" min="5" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Altitude (m)</label>
+                <input type="number" id="altitude" value="30" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Speed (m/s)</label>
+                <input type="number" id="speed" value="5" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Camera Action</label>
+                <select id="cameraAction" class="w-full border p-2 rounded">
+                    <option value="photo">📷 Photo</option>
+                    <option value="video">🎥 Video</option>
+                </select>
+            </div>
+        </div>
 
-        <label class="block">
-            <span class="text-sm text-gray-600">Mission Type</span>
-            <select id="missionType" class="w-full mt-1 p-1 border rounded">
-                <option value="orbit">Orbit</option>
-                <option value="grid">Grid</option>
-                <option value="linear">Linear</option>
-            </select>
-        </label>
+        <button id="generateMissionBtn"
+                class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400 hover:cursor-pointer"
+                disabled>Generate Mission</button>
+    </div>
 
-        <label class="block">
-            <span class="text-sm text-gray-600">Altitude (m)</span>
-            <input type="number" id="altitude" class="w-full mt-1 p-1 border rounded" value="60">
-        </label>
 
-        <label class="block">
-            <span class="text-sm text-gray-600">Speed (m/s)</span>
-            <input type="number" id="speed" class="w-full mt-1 p-1 border rounded" value="5">
-        </label>
 
-        <label class="block">
-            <span class="text-sm text-gray-600">Gimbal Angle (°)</span>
-            <input type="number" id="gimbal" class="w-full mt-1 p-1 border rounded" value="-90">
-        </label>
+<!-- Waypoint Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-[rgb(0,0,0)]/50 flex items-center justify-center z-50 hidden">
 
-        <button id="generateBtn" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 w-full">
-            🎯 Generate Mission
-        </button>
+    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+        <h2 id="editModalTitle" class="text-xl font-bold mb-4"></h2>
+        <form id="waypointForm" class="space-y-3">
+            <input type="hidden" id="waypointIndex" />
+            <div>
+                <label class="block text-sm font-medium">Altitude (m)</label>
+                <input type="number" id="edit-altitude" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Speed (m/s)</label>
+                <input type="number" id="edit-speed" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Gimbal Angle</label>
+                <input type="range" min="-100" max="100" id="edit-gimbal" class="w-full border p-2 rounded" oninput="this.nextElementSibling.value = this.value"/>
+                <output>auto</output>
+            </div>
+            <div>
+                <label class="block text-sm font-medium">Camera Action</label>
+                <select id="edit-action" class="w-full border p-2 rounded cursor-pointer">
+                    <option value="photo">Photo</option>
+                    <option value="start_video">Start Video</option>
+                    <option value="stop_video">Stop Video</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" id="editCancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 hover:cursor-pointer">Cancel</button>
+                <button id="editSaveBtn" type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hover:cursor-pointer">Save</button>
+            </div>
+        </form>
     </div>
 </div>
+
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
