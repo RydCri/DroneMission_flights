@@ -18,17 +18,18 @@ This component provides users of the webapp with tools to:
 <br>
 This app's focus is on generating maps, orthomosaics, and photogrammetry using FPV and gimbal camera drones.
 <br>
-<img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
-<br>
-<i>Flight Mission Demo</i>
-<br>
-<div>
 <p>The app is intended for use with off-the-shelf dronekits that support mission planning through tools like DJI Pilot, QGroundControl, or Mission Planner.</p>
+<img style="height:200px;width:250px;" src="missionBuilder.png" alt="project select">
+<div>
 <p>Once mission is complete: collected files will be uploadable to build projects related to mission type.</p>
 <img style="height:200px;width:250px;" src="projSelect.png" alt="project select">
 <br>
 <i>A single grid flight can collect photos usable for projects in basic photogrammetry like Digital Surface Models (DSM) or Digital Elevation Models (DEM)</i>
 </div>
+<br>
+<img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
+<br>
+<i>Flight Mission Demo</i>
 
 
 
