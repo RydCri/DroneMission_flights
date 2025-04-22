@@ -19,6 +19,7 @@ def create_app():
          resources={
              r"/auth/*": {"origins": "http://localhost:5173"},
              r"/missions/*": {"origins": "http://localhost:5173"},
+             r"/export/*": {"origins": "http://localhost:5173"},
          }
          )
 
