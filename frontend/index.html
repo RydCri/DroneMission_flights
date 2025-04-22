@@ -7,37 +7,51 @@
     <link href="src/styles.css" rel="stylesheet">
     <link href="src/assets/drone_icon.png" rel="icon">
 </head>
-<body class="h-screen w-screen overflow-hidden">
-<div id="map" class="w-full h-screen absolute inset-0 z-0"></div>
+<body class="">
+<div id="map" class="w-full h-screen absolute inset-0 z-0 overflow-visible"></div>
 
 <!-- Control Panel -->
 <div class="absolute top-4 left-4 z-10 bg-white p-4 rounded-2xl shadow-xl w-72 space-y-4">
     <h2 class="text-xl font-semibold">Mission Planner</h2>
+            <label for="mission-type" class="block mb-1 text-sm font-semibold">Mission Type</label>
+            <select id="mission-type" class="p-2 border rounded w-full text-sm">
+                <option value="orbit">Orbit</option>
+                <option value="grid">Grid</option>
+                <option value="linear">Linear</option>
+            </select>
 
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Mission Type</label>
-        <select id="missionType" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-            <option value="orbit">Orbit</option>
-            <option value="grid">Double Grid</option>
-            <option value="manual">Manual</option>
-        </select>
+    <div id="mission-controls" class="absolute top-4 left-4 z-10 bg-white shadow-lg rounded p-4 w-72 space-y-3">
+        <h2 class="text-lg font-semibold">Mission Builder</h2>
+
+        <label class="block">
+            <span class="text-sm text-gray-600">Mission Type</span>
+            <select id="missionType" class="w-full mt-1 p-1 border rounded">
+                <option value="orbit">Orbit</option>
+                <option value="grid">Grid</option>
+                <option value="linear">Linear</option>
+            </select>
+        </label>
+
+        <label class="block">
+            <span class="text-sm text-gray-600">Altitude (m)</span>
+            <input type="number" id="altitude" class="w-full mt-1 p-1 border rounded" value="60">
+        </label>
+
+        <label class="block">
+            <span class="text-sm text-gray-600">Speed (m/s)</span>
+            <input type="number" id="speed" class="w-full mt-1 p-1 border rounded" value="5">
+        </label>
+
+        <label class="block">
+            <span class="text-sm text-gray-600">Gimbal Angle (°)</span>
+            <input type="number" id="gimbal" class="w-full mt-1 p-1 border rounded" value="-90">
+        </label>
+
+        <button id="generateBtn" class="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 w-full">
+            🎯 Generate Mission
+        </button>
     </div>
-
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Altitude (m)</label>
-        <input id="altitude" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="60"/>
-    </div>
-
-    <div>
-        <label class="block text-sm font-medium text-gray-700">Speed (m/s)</label>
-        <input id="speed" type="number" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="5"/>
-    </div>
-
-    <button id="exportBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-        Export KML
-    </button>
 </div>
-<script type="module" src="src/js/map.js"></script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
