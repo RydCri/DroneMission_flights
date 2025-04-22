@@ -11,7 +11,7 @@
 <div id="map" class="w-full h-screen absolute inset-0 z-0 overflow-visible"></div>
 
     <!-- Sidebar: Mission Config Panel -->
-    <div id="mission-controls">
+    <div id="mission-controls" class="absolute p-4 left-0 top-20 w-70 h-full bg-[rgb(255,255,255)]/90  rounded shadow-xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
         <h2 class="text-lg font-semibold">Mission Setup</h2>
 
         <div>
@@ -77,9 +77,21 @@
                 <input type="number" id="edit-speed" class="w-full border p-2 rounded" />
             </div>
             <div>
-                <label class="block text-sm font-medium">Gimbal Angle</label>
-                <input type="range" min="-100" max="100" id="edit-gimbal" class="w-full border p-2 rounded" oninput="this.nextElementSibling.value = this.value"/>
+                <input type="range" min="-100" max="100" id="edit-gimbal" class="w-full border p-0 rounded" oninput="this.nextElementSibling.value = this.value"/>
                 <output>auto</output>
+                <label class="block text-sm font-medium">Gimbal Angle</label>
+            </div>
+                <hr>
+            <div class="bg-rgb(0,0,0)/20">
+                <label class="block text-sm font-medium">Gimbal Track POI</label>
+            <div class="radio-container">
+                <label class="mission-radio">Disable</label>
+                <input class="radio-input" type="radio" id="radio-disable">
+                <label class="mission-radio">Track</label>
+                <input class="radio-input" type="radio" id="radio-track">
+                <label class="mission-radio">Interpolate</label>
+                <input class="radio-input" type="radio" id="radio-interpolate">
+            </div>
             </div>
             <div>
                 <label class="block text-sm font-medium">Camera Action</label>
@@ -96,11 +108,15 @@
         </form>
     </div>
 </div>
-<div id="waypointTree">
-    <h2 class="text-xl font-bold mb-4">Mission Waypoints</h2>
-    <ul class="space-y-2" id="missionList">
-        <!-- Missions will be injected here -->
-    </ul>
+
+<!-- Collapsible Tree Panel -->
+<div id="waypointTreeWrapper" class="fixed left-0 top-11 h-full max-w-md w-full z-10 transform transition-transform duration-300 -translate-x-full">
+    <div id="waypointTree" class="p-4 w-full h-full bg-[rgb(255,255,255)]/90 rounded-r-2xl shadow-xl overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4">Mission Waypoints</h2>
+        <ul class="space-y-2" id="missionList">
+            <!-- Missions will be injected here -->
+        </ul>
+    </div>
 </div>
 
 <!-- Batch Edit Panel -->
@@ -128,6 +144,32 @@
         <button type="button" onclick="closeBatchEditor()" class="ml-2 text-sm text-gray-600 hover:underline hover:text-gray-700 cursor-pointer">Cancel</button>
     </form>
 </div>
+
+<!-- Waypoint Editor Panel -->
+<div id="waypointEditor" class="hidden fixed right-4 top-4 p-4 bg-white rounded-2xl shadow-xl w-80 z-10">
+    <h3 class="text-lg font-semibold mb-2">Edit Waypoint</h3>
+    <form id="waypointEditForm" class="space-y-2">
+        <div>
+            <label for="wp-altitude" class="block text-sm font-medium">Altitude (m)</label>
+            <input type="number" id="wp-altitude" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="wp-speed" class="block text-sm font-medium">Speed (m/s)</label>
+            <input type="number" id="wp-speed" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="wp-action" class="block text-sm font-medium">Camera Action</label>
+            <select id="wp-action" class="w-full border rounded px-2 py-1">
+                <option value="Photo">Photo</option>
+                <option value="Start Video">Start Video</option>
+                <option value="Stop Video">Stop Video</option>
+            </select>
+        </div>
+        <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Save</button>
+        <button type="button" onclick="closeWaypointEditor()" class="ml-2 text-sm text-gray-600 hover:underline">Cancel</button>
+    </form>
+</div>
+
 
 <script>
     const missions = [
@@ -162,18 +204,25 @@
           <button onclick="openBatchEditor(${missionIndex})" class="text-xs text-gray-600 hover:underline hover:text-gray-700 cursor-pointer">Batch Edit</button>
         </summary>
         <ul class="ml-4 mt-2 space-y-1">
-          ${mission.waypoints.map(wp => `
-            <li class="pl-2 border-l-2 border-blue-300 text-sm">
-              <button onclick="openWaypointEditor(${wp.id - 1})" class="hover:underline cursor-pointer">
-                Waypoint ${wp.id} — Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}
-              </button>
-            </li>
-          `).join('')}
+${mission.waypoints.map((wp, wpIndex) => `
+  <li class="pl-2 border-l-2 border-blue-300 text-sm flex justify-between items-center">
+    <button onclick="openWaypointEditor(${missionIndex}, ${wpIndex})" class="hover:underline flex-grow text-left">
+      Waypoint ${wp.id} — Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}
+    </button>
+    <button onclick="deleteWaypoint(${missionIndex}, ${wpIndex})" class="text-red-500 hover:text-red-700 ml-2 text-xs cursor-pointer">✖</button>
+  </li>
+`).join('')}
+
         </ul>
       </details>
     `;
             list.appendChild(li);
         });
+    }
+
+    function deleteWaypoint(missionIndex, wpIndex) {
+        missions[missionIndex].waypoints.splice(wpIndex, 1);
+        renderWaypointTree();
     }
 
     function openBatchEditor(missionIndex) {
@@ -207,6 +256,42 @@
     });
 
     renderWaypointTree();
+
+
+    let currentMissionIndex = null;
+    let currentWaypointIndex = null;
+
+    function openWaypointEditor(missionIndex, wpIndex) {
+        const wp = missions[missionIndex].waypoints[wpIndex];
+        alert(`Edit Waypoint ${wp.id} - Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}`);
+
+        document.getElementById("wp-altitude").value = wp.altitude;
+        document.getElementById("wp-speed").value = wp.speed;
+        document.getElementById("wp-action").value = wp.action;
+
+        document.getElementById("waypointEditor").classList.remove("hidden");
+    }
+
+    function closeWaypointEditor() {
+        document.getElementById("waypointEditor").classList.add("hidden");
+    }
+
+    // Handle single waypoint save
+    document.getElementById("waypointEditForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const altitude = parseFloat(document.getElementById("wp-altitude").value);
+        const speed = parseFloat(document.getElementById("wp-speed").value);
+        const action = document.getElementById("wp-action").value;
+
+        const wp = missions[currentMissionIndex].waypoints[currentWaypointIndex];
+        wp.altitude = altitude;
+        wp.speed = speed;
+        wp.action = action;
+
+        renderWaypointTree();
+        closeWaypointEditor();
+    });
+
 </script>
 
 
