@@ -30,11 +30,13 @@ loader.importLibrary("maps").then(async () => {
 function initMapControls(map) {
     const controlDiv = document.createElement("div");
     controlDiv.className = "p-2 space-y-2";
+    const wpUI = document.createElement("div");
+    wpUI.className = "p-2 space-y-2";
 
     // Map/Satellite Toggle
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "🗺 Map View";
-    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-50";
+    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-30";
 
     toggleBtn.addEventListener("click", () => {
         const current = map.getMapTypeId();
@@ -50,7 +52,7 @@ function initMapControls(map) {
     // 📍 My Location Button
     const mylocationBtn = document.createElement("button");
     mylocationBtn.textContent = "📍 My Location";
-    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-50";
+    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-30";
 
     mylocationBtn.addEventListener("click", () => {
         if (navigator.geolocation) {
@@ -88,7 +90,7 @@ function initMapControls(map) {
 
     const liveTrackBtn = document.createElement("button");
     liveTrackBtn.textContent = "📡 Start Tracking";
-    liveTrackBtn.className = "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm hover:cursor-pointer";
+    liveTrackBtn.className = "px-3 py-1 text-white rounded bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-sm hover:cursor-pointer";
 
     function startTracking(map) {
         if (watchId) return;
@@ -181,17 +183,28 @@ function initMapControls(map) {
     const missionBtn = document.createElement('button')
     const missionUI = document.getElementById('mission-controls')
     missionBtn.textContent = 'Build Mission'
-    missionBtn.className = "px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm hover:cursor-pointer";
+    missionBtn.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white rounded text-sm hover:cursor-pointer";
     missionBtn.id = 'mission-toggle'
+    const wpTree = document.getElementById('waypointTree')
+    const wpTreeToggle = document.createElement('button')
+    wpTreeToggle.textContent = 'Waypoints'
+    wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white rounded text-sm hover:cursor-pointer";
+    wpTreeToggle.id = 'mission-toggle'
     // Append buttons
     controlDiv.appendChild(toggleBtn);
     controlDiv.appendChild(mylocationBtn);
     controlDiv.appendChild(liveTrackBtn);
-    controlDiv.appendChild(missionBtn)
+    wpUI.appendChild(missionBtn);
+    wpUI.appendChild(wpTreeToggle);
     missionBtn.addEventListener('click', () => {
         missionUI.classList.toggle('mission-open')
     });
+    wpTreeToggle.addEventListener('click', () => {
+        wpTree.classList.toggle('waypointTree')
+    });
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(wpUI);
+
 }
 
 let mapInstance = null;
