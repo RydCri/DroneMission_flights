@@ -96,11 +96,37 @@
         </form>
     </div>
 </div>
-<div id="waypointTree" class="p-4 w-full max-w-md bg-white rounded-2xl shadow-xl absolute overflow-y-auto">
+<div id="waypointTree">
     <h2 class="text-xl font-bold mb-4">Mission Waypoints</h2>
     <ul class="space-y-2" id="missionList">
-        <!-- Missions injected here -->
+        <!-- Missions will be injected here -->
     </ul>
+</div>
+
+<!-- Batch Edit Panel -->
+<div id="batchEditor" class="hidden right-4 absolute fixed top-4 p-4 bg-white rounded-2xl shadow-xl w-80 z-10">
+    <h3 class="text-lg font-semibold mb-2">Batch Edit</h3>
+    <form id="batchEditForm" class="space-y-2">
+        <div>
+            <label for="batch-altitude" class="block text-sm font-medium">Altitude (m)</label>
+            <input type="number" id="batch-altitude" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="batch-speed" class="block text-sm font-medium">Speed (m/s)</label>
+            <input type="number" id="batch-speed" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="batch-action" class="block text-sm font-medium">Camera Action</label>
+            <select id="batch-action" class="w-full border rounded px-2 py-1 cursor-pointer">
+                <option value="">-- No Change --</option>
+                <option value="Photo">Photo</option>
+                <option value="Start Video">Start Video</option>
+                <option value="Stop Video">Stop Video</option>
+            </select>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 cursor-pointer">Apply to All</button>
+        <button type="button" onclick="closeBatchEditor()" class="ml-2 text-sm text-gray-600 hover:underline hover:text-gray-700 cursor-pointer">Cancel</button>
+    </form>
 </div>
 
 <script>
@@ -127,15 +153,18 @@
         const list = document.getElementById("missionList");
         list.innerHTML = "";
 
-        missions.forEach(mission => {
+        missions.forEach((mission, missionIndex) => {
             const li = document.createElement("li");
             li.innerHTML = `
       <details class="group">
-        <summary class="cursor-pointer font-semibold text-blue-700">${mission.name}</summary>
+        <summary class="cursor-pointer font-semibold text-blue-700 flex justify-between items-center">
+          ${mission.name}
+          <button onclick="openBatchEditor(${missionIndex})" class="text-xs text-gray-600 hover:underline hover:text-gray-700 cursor-pointer">Batch Edit</button>
+        </summary>
         <ul class="ml-4 mt-2 space-y-1">
           ${mission.waypoints.map(wp => `
             <li class="pl-2 border-l-2 border-blue-300 text-sm">
-              <button onclick="openWaypointEditor(${wp.id - 1})" class="hover:underline">
+              <button onclick="openWaypointEditor(${wp.id - 1})" class="hover:underline cursor-pointer">
                 Waypoint ${wp.id} — Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}
               </button>
             </li>
@@ -147,14 +176,41 @@
         });
     }
 
+    function openBatchEditor(missionIndex) {
+        document.getElementById("batchEditor").classList.remove("hidden");
+        document.getElementById("batchEditor").dataset.missionIndex = missionIndex;
+    }
+
+    function closeBatchEditor() {
+        document.getElementById("batchEditor").classList.add("hidden");
+    }
+
+    // Handle batch form submission
+    const batchForm = document.getElementById("batchEditForm");
+    batchForm.addEventListener("submit", e => {
+        e.preventDefault();
+        const missionIndex = parseInt(document.getElementById("batchEditor").dataset.missionIndex);
+        const mission = missions[missionIndex];
+
+        const altitude = document.getElementById("batch-altitude").value;
+        const speed = document.getElementById("batch-speed").value;
+        const action = document.getElementById("batch-action").value;
+
+        mission.waypoints.forEach(wp => {
+            if (altitude) wp.altitude = parseFloat(altitude);
+            if (speed) wp.speed = parseFloat(speed);
+            if (action) wp.action = action;
+        });
+
+        renderWaypointTree();
+        closeBatchEditor();
+    });
+
     renderWaypointTree();
 </script>
 
-<style>
-    #waypointTree {
-        max-height: 80vh;
-    }
-</style>
+
+
 
 <script type="module" src="src/main.js"></script>
 </body>
