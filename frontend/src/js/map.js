@@ -36,7 +36,7 @@ function initMapControls(map) {
     // Map/Satellite Toggle
     const toggleBtn = document.createElement("button");
     toggleBtn.textContent = "🗺 Map View";
-    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-30";
+    toggleBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-40";
 
     toggleBtn.addEventListener("click", () => {
         const current = map.getMapTypeId();
@@ -52,7 +52,7 @@ function initMapControls(map) {
     // 📍 My Location Button
     const mylocationBtn = document.createElement("button");
     mylocationBtn.textContent = "📍 My Location";
-    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-30";
+    mylocationBtn.className = "px-3 py-1 bg-blue-500 text-white tx-shadow-sm rounded hover:bg-blue-600 text-sm hover:cursor-pointer w-40";
 
     mylocationBtn.addEventListener("click", () => {
         if (navigator.geolocation) {
