@@ -183,13 +183,14 @@ function initMapControls(map) {
     const missionBtn = document.createElement('button')
     const missionUI = document.getElementById('mission-controls')
     missionBtn.textContent = 'Build Mission ⇕ '
-    missionBtn.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white active:border rounded text-sm hover:cursor-pointer";
+    missionBtn.className = "px-3 py-1 bg-[rgb(0,0,0)]/60 hover:bg-[rgb(0,0,0)]/80 text-white active:border rounded text-sm hover:cursor-pointer";
     missionBtn.id = 'mission-toggle'
-    const wpTree = document.getElementById('waypointTree')
+    const wpTree = document.getElementById('waypointTreeWrapper')
     const wpTreeToggle = document.createElement('button')
     wpTreeToggle.textContent = 'Waypoints ⇕ '
-    wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/50 hover:bg-[rgb(0,0,0)]/60 text-white active:border rounded text-sm hover:cursor-pointer";
+    wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/60 hover:bg-[rgb(0,0,0)]/80 text-white active:border rounded shadow text-sm hover:cursor-pointer";
     wpTreeToggle.id = 'mission-toggle'
+
     // Append buttons
     controlDiv.appendChild(toggleBtn);
     controlDiv.appendChild(mylocationBtn);
@@ -197,11 +198,12 @@ function initMapControls(map) {
     wpUI.appendChild(missionBtn);
     wpUI.appendChild(wpTreeToggle);
     missionBtn.addEventListener('click', () => {
-        missionUI.classList.toggle('mission-open')
+        missionUI.classList.toggle('-translate-x-full')
     });
     wpTreeToggle.addEventListener('click', () => {
-        wpTree.classList.toggle('waypointTree')
+        wpTree.classList.toggle('-translate-x-full')
     });
+
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(wpUI);
 
