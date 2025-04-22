@@ -2,95 +2,140 @@ import { getMap } from "./map.js";
 let poi = null;
 let markers = [];
 let missionType = "orbit";
+const waypointData = [];
+const waypointMarkers = [];
+
 
 let listenerAttached = false;
 
 getMap().then((map) => {
+    const poiDisplay = document.getElementById("poi-coords");
+    const generateBtn = document.getElementById("generateMissionBtn");
+
+    // Update POI when clicking map
+    map.addListener("click", (e) => {
+        poi = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+        poiDisplay.textContent = `${poi.lat.toFixed(5)}, ${poi.lng.toFixed(5)}`;
+        map.panTo(poi)
+        map.setZoom(17)
+        generateBtn.disabled = false;
+    });
+
+    // Generate mission on submit
+    generateBtn.addEventListener("click", () => {
+        if (!poi) return;
+
+        const missionType = document.getElementById("missionType").value;
+
+        // Grab orbit settings
+        const orbitCount = parseInt(document.getElementById("orbitCount").value, 10);
+        const orbitRadius = parseFloat(document.getElementById("orbitRadius").value);
+        const altitude = parseFloat(document.getElementById("altitude").value);
+        const speed = parseFloat(document.getElementById("speed").value);
+        const cameraAction = document.getElementById("cameraAction").value;
+
+        const config = {
+            poi,
+            orbitCount,
+            orbitRadius,
+            altitude,
+            speed,
+            cameraAction,
+        };
+
+        if (missionType === "orbit") {
+            generateOrbitMission(config, map);
+        }
+
+        // TODO: disable form / highlight mission / enable editing, etc.
+    });
+});
+
+getMap().then((map) => {
     if (!listenerAttached) {
-        console.log('Setting map listener')
         map.addListener("click", (e) => {
             poi = { lat: e.latLng.lat(), lng: e.latLng.lng() };
-            generateMissionWaypoints(poi, missionType);
         });
         listenerAttached = true;
-        console.log(listenerAttached)
     }
 });
 
+
+
+
+let waypoints = [];
+
+document.body.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("generateBtn").addEventListener("click", () => {
+        const missionType = document.getElementById("missionType").value;
+        const altitude = parseFloat(document.getElementById("altitude").value);
+        const speed = parseFloat(document.getElementById("speed").value);
+        const gimbal = parseFloat(document.getElementById("gimbal").value);
+
+        if (!poi) {
+            alert("Please click a location on the map to set a POI first.");
+            return;
+        }
+
+        const config = {altitude, speed, gimbal};
+        generateMissionWaypoints(poi, missionType, config);
+    });
 // Mission dropdown listener
 const missionSelect = document.getElementById("mission-type");
 missionSelect.addEventListener("change", (e) => {
     missionType = e.target.value;
 });
-
-const missionOptions = [
-    { label: "Orbit", value: "orbit" },
-    { label: "Grid Photo", value: "grid-photo" },
-    { label: "Grid Video", value: "grid-video" },
-];
-
-
-let waypoints = [];
-export function generateMissionWaypoints(poi, missionType = "orbit", config = {}) {
-    waypoints = []; // Reset
-
-    switch (missionType) {
-        case "orbit":
-            waypoints = generateOrbit(poi, 50, 8); // center, radius (m), number of points
-            break;
-        case "grid":
-            waypoints = generateGrid(poi, 100, 80, 4, 3); // center, width, height, rows, cols
-            break;
-        case "linear":
-            waypoints = generateLinear(poi, 200, 5); // center, length, number of points
-            break;
-        default:
-            console.warn("Unsupported mission type");
-            return;
-    }
-
-    drawWaypoints(waypoints);
-}
-
-
-document.getElementById("generateBtn").addEventListener("click", () => {
-    const missionType = document.getElementById("missionType").value;
-    const altitude = parseFloat(document.getElementById("altitude").value);
-    const speed = parseFloat(document.getElementById("speed").value);
-    const gimbal = parseFloat(document.getElementById("gimbal").value);
-
-    if (!poi) {
-        alert("Please click a location on the map to set a POI first.");
-        return;
-    }
-
-    const config = { altitude, speed, gimbal };
-    generateMissionWaypoints(poi, missionType, config);
 });
 
-function generateOrbit(center, radiusMeters, pointCount) {
-    const R = 6371000; // Earth radius in meters
-    const lat = center.lat * (Math.PI / 180);
-    const lng = center.lng * (Math.PI / 180);
 
-    const waypoints = [];
+function generateOrbitMission(config, map) {
+    const {
+        poi,
+        orbitCount,
+        orbitRadius,
+        altitude,
+        speed,
+        cameraAction
+    } = config;
 
-    for (let i = 0; i < pointCount; i++) {
-        const angle = (2 * Math.PI * i) / pointCount;
-        const dx = (radiusMeters / R) * Math.cos(angle);
-        const dy = (radiusMeters / R) * Math.sin(angle);
+    const pointsPerOrbit = 12;
+    const totalPoints = orbitCount * pointsPerOrbit;
 
-        const latOffset = lat + dy;
-        const lngOffset = lng + dx / Math.cos(lat);
+    for (let i = 0; i < totalPoints; i++) {
+        const angle = (i / pointsPerOrbit) * 2 * Math.PI;
+        const latOffset = (orbitRadius / 111111) * Math.cos(angle);
+        const lngOffset = (orbitRadius / (111111 * Math.cos(poi.lat * Math.PI / 180))) * Math.sin(angle);
+
+        const position = {
+            lat: poi.lat + latOffset,
+            lng: poi.lng + lngOffset,
+        };
+
+        const meta = {
+            altitude,
+            speed,
+            action: cameraAction,
+            gimbal: -90,
+        };
+
+        const marker = new google.maps.Marker({
+            position,
+            map,
+            label: `${waypoints.length + 1}`,
+            title: `Waypoint ${waypoints.length + 1}`,
+        });
+        const index = waypoints.length; // capture current index before push
+
+        marker.addListener("click", () => openWaypointEditor(index));
 
         waypoints.push({
-            lat: (latOffset * 180) / Math.PI,
-            lng: (lngOffset * 180) / Math.PI,
+            position,
+            meta,
+            marker
         });
     }
-
-    return waypoints;
 }
+
 
 function generateGrid(center, width, height, rows, cols) {
     const waypoints = [];
@@ -212,3 +257,44 @@ function updateWaypointData() {
     }));
     console.log("Updated Waypoints:", data);
 }
+
+function openWaypointEditor(index) {
+    const wp = waypoints[index];
+    const meta = wp.meta;
+
+    // Update modal header
+    document.getElementById("editModalTitle").textContent = `Edit Waypoint ${index + 1}`;
+
+    // Set input values
+    document.getElementById("edit-altitude").value = meta.altitude;
+    document.getElementById("edit-speed").value = meta.speed;
+    document.getElementById("edit-action").value = meta.action;
+    document.getElementById("edit-gimbal").value = meta.gimbal;
+
+    // Store index for save handler
+    document.getElementById("editModal").dataset.index = index;
+
+    // Show modal
+    document.getElementById("editModal").classList.remove("hidden");
+
+    // Save btn
+    document.getElementById("editSaveBtn").addEventListener("click", () => {
+        const index = parseInt(document.getElementById("editModal").dataset.index);
+        const wp = waypoints[index];
+
+        wp.meta.altitude = parseFloat(document.getElementById("edit-altitude").value);
+        wp.meta.speed = parseFloat(document.getElementById("edit-speed").value);
+        wp.meta.action = document.getElementById("edit-action").value;
+        wp.meta.gimbal = parseFloat(document.getElementById("edit-gimbal").value);
+
+        // Optional: update tooltip or styling
+        wp.marker.setTitle(`Waypoint ${index + 1} - ${wp.meta.action}`);
+    });
+        // Close modal
+    document.getElementById("editCancelBtn").addEventListener("click", () => {
+        document.getElementById("editModal").classList.add("hidden");
+    });
+
+}
+
+
