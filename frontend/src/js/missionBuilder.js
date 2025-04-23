@@ -1,4 +1,25 @@
 import { getMap } from "./map.js";
+import { addMissionToTree } from "./tree.js";
+// TODO: offload actual data handling from tree.js
+export const missions = [];
+
+function registerMission(name, type, poi, waypoints) {
+    const missionId = crypto.randomUUID();
+    const timestamp = new Date().toISOString();
+
+    const mission = {
+        id: missionId,
+        name,
+        type,
+        timestamp,
+        poi,
+        waypoints,
+    };
+
+    missions.push(mission);
+    addMissionToTree(mission);
+}
+
 let poi = null;
 let markers = [];
 let missionType = "orbit";
@@ -63,7 +84,7 @@ getMap().then((map) => {
 
 
 
-let waypoints = [];
+export const waypoints = [];
 
 document.body.addEventListener("DOMContentLoaded", () => {
     document.getElementById("generateBtn").addEventListener("click", () => {
@@ -76,9 +97,9 @@ document.body.addEventListener("DOMContentLoaded", () => {
             alert("Please click a location on the map to set a POI first.");
             return;
         }
-
-        const config = {altitude, speed, gimbal};
-        generateMissionWaypoints(poi, missionType, config);
+        // Refactor for map edit or use tree.js edit
+        // const config = {altitude, speed, gimbal};
+        // generateMissionWaypoints(poi, missionType, config);
     });
 // Mission dropdown listener
 const missionSelect = document.getElementById("mission-type");
@@ -134,6 +155,14 @@ function generateOrbitMission(config, map) {
             marker
         });
     }
+    registerMission(
+        `Orbit Mission @ ${new Date().toLocaleTimeString()}`,
+        "orbit",
+        poi,
+        [...waypoints]  // use deep copy
+    );
+        console.log(missions)
+
 }
 
 
@@ -161,7 +190,7 @@ function generateGrid(center, width, height, rows, cols) {
 
     return waypoints;
 }
-
+// replace
 function generateLinear(center, length, points) {
     const waypoints = [];
     const step = metersToLng(length / (points - 1), center.lat);
@@ -258,7 +287,7 @@ function updateWaypointData() {
     console.log("Updated Waypoints:", data);
 }
 
-function openWaypointEditor(index) {
+export function openWaypointEditor(index) {
     const wp = waypoints[index];
     const meta = wp.meta;
 
