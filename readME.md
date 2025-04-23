@@ -19,7 +19,7 @@ This component provides users of the webapp with tools to:
 This app's focus is on generating maps, orthomosaics, and photogrammetry using FPV and gimbal camera drones.
 <br>
 <p>The app is intended for use with off-the-shelf dronekits that support mission planning through tools like DJI Pilot, QGroundControl, or Mission Planner.</p>
-<img style="height:200px;width:250px;" src="missionBuilder.png" alt="project select">
+<img style="height:200px;width:250px;" src="treeSearchOrbits.png" alt="project select">
 <div>
 <p>Once mission is complete: collected files will be uploadable to build projects related to mission type.</p>
 <img style="height:200px;width:250px;" src="projSelect.png" alt="project select">
