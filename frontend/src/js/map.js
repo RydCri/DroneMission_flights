@@ -1,4 +1,5 @@
 import { Loader } from "@googlemaps/js-api-loader";
+let markers;
 
 const loader = new Loader({
     apiKey: import.meta.env.VITE_MAPS_API_KEY,
@@ -82,6 +83,64 @@ function initMapControls(map) {
         }
     });
 
+    let placesService;
+
+
+
+function performSearch(query) {
+    placesService = new google.maps.places.PlacesService(map);
+    const request = {
+        query: query,
+        location: map.getCenter(),
+        radius: 10000,
+    };
+
+
+    placesService.textSearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            displayResults(results);
+        } else {
+            console.error('Places API Error:', status);
+            document.getElementById('results').innerHTML = 'Error fetching results.';
+        }
+    });
+}
+
+function displayResults(places) {
+    resultsUI.innerHTML = ''; // Clear previous results
+    markers = []; // Clear the markers array
+
+    if (places && places.length > 0) {
+        places.forEach((place) => {
+            const placeElement = document.createElement('div');
+            placeElement.classList.add('result-item'); // Add a class for styling and event listener
+
+            placeElement.innerHTML = `<div class="cursor-pointer hover:bg-blue-400 hover:text-white"><span>${place.name}</span><br>${place.formatted_address || 'No address available'}}</div>`;
+            resultsUI.appendChild(placeElement);
+
+            const marker = new google.maps.Marker({
+                map: map,
+                position: place.geometry.location,
+                title: place.name,
+            });
+            markers.push(marker);
+
+            placeElement.addEventListener('click', () => {
+                map.panTo(place.geometry.location);
+                map.setZoom(15);
+            });
+        });
+    } else {
+        resultsContainer.innerHTML = 'No results found.';
+    }
+}
+
+// function clearMarkers() {
+//     markers.forEach(marker => {
+//         marker.setMap(null); // Remove marker from the map
+//     });
+//     markers = []; // Clear the markers array
+// }
 
     let userPath = null;
     let pathCoords = [];
@@ -119,10 +178,10 @@ function initMapControls(map) {
                     userMarker.setPosition(userLatLng);
                 }
 
-                // Append to path
+                // Append to POI
                 pathCoords.push(userLatLng);
 
-                // Draw or update polyline
+                // Draw polyline
                 if (!userPath) {
                     userPath = new google.maps.Polyline({
                         path: pathCoords,
@@ -180,6 +239,19 @@ function initMapControls(map) {
         }
     });
 
+
+    const searchUI = document.createElement('div')
+    searchUI.classList.add('bg-[rgb(255,255,255)]/90', 'p-4', 'text-black')
+    const searchBtn = document.createElement('button')
+    searchBtn.classList.add('bg-blue-500', 'hover:bg-blue-600','rounded', 'p-2', 'mx-1', 'text-white', 'cursor-pointer')
+    searchBtn.textContent = 'Search'
+    const resultsUI = document.createElement('div')
+    resultsUI.classList.add('overflow-y-scroll', 'h-20', 'z-50')
+    const searchInput = document.createElement('input')
+    searchInput.type = 'text'
+    searchInput.placeholder = 'Search for places'
+    searchInput.classList.add('font-medium', 'p-1')
+    searchUI.append(searchInput,searchBtn,resultsUI)
     const missionBtn = document.createElement('button')
     const missionUI = document.getElementById('mission-controls')
     missionBtn.textContent = 'Build Mission ⇕ '
@@ -191,18 +263,28 @@ function initMapControls(map) {
     wpTreeToggle.className = "px-3 py-1 bg-[rgb(0,0,0)]/60 hover:bg-[rgb(0,0,0)]/80 text-white active:border rounded shadow text-sm hover:cursor-pointer";
     wpTreeToggle.id = 'mission-toggle'
 
+
+
     // Append buttons
     controlDiv.appendChild(toggleBtn);
     controlDiv.appendChild(mylocationBtn);
     controlDiv.appendChild(liveTrackBtn);
     wpUI.appendChild(missionBtn);
     wpUI.appendChild(wpTreeToggle);
+    wpUI.appendChild(searchUI);
     missionBtn.addEventListener('click', () => {
         missionUI.classList.toggle('-translate-x-full')
     });
     wpTreeToggle.addEventListener('click', () => {
         wpTree.classList.toggle('-translate-x-full')
     });
+   searchBtn.addEventListener('click', () => {
+    const query = searchInput.value;
+    if (query) {
+        // clearMarkers(); // Clear previous markers
+        performSearch(query);
+    }
+   })
 
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(controlDiv);
     map.controls[google.maps.ControlPosition.TOP_LEFT].push(wpUI);
