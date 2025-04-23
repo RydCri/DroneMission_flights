@@ -11,7 +11,7 @@
 <div id="map" class="w-full h-screen absolute inset-0 z-0 overflow-visible"></div>
 
     <!-- Sidebar: Mission Config Panel -->
-    <div id="mission-controls" class="absolute p-4 left-0 top-20 w-70 h-full bg-[rgb(255,255,255)]/90  rounded shadow-xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+    <div id="mission-controls" class="absolute p-4 left-0 top-20 w-70 h-full bg-[rgb(255,255,255)]/90 rounded shadow-xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
         <h2 class="text-lg font-semibold">Mission Setup</h2>
 
         <div>
@@ -117,6 +117,9 @@
             <!-- Missions will be injected here -->
         </ul>
     </div>
+            <button onclick="exportMissionJSON()" class="relative bottom-30 left-2 hover:bg-[rgb(0,0,0)]/90 bg-[rgb(100,100,100)]/50 text-white px-3 py-1 rounded-xs shadow-md z-50 cursor-pointer">
+                Export JSON
+            </button>
 </div>
 
 <!-- Batch Edit Panel -->
@@ -169,132 +172,6 @@
         <button type="button" onclick="closeWaypointEditor()" class="ml-2 text-sm text-gray-600 hover:underline">Cancel</button>
     </form>
 </div>
-
-
-<script>
-    const missions = [
-        {
-            id: 1,
-            name: "Orbit around POI",
-            waypoints: [
-                { id: 1, altitude: 50, speed: 5, action: "Photo" },
-                { id: 2, altitude: 50, speed: 5, action: "Photo" },
-            ]
-        },
-        {
-            id: 2,
-            name: "Grid Area Scan",
-            waypoints: [
-                { id: 1, altitude: 40, speed: 3, action: "Start Video" },
-                { id: 2, altitude: 40, speed: 3, action: "Stop Video" },
-            ]
-        }
-    ];
-
-    function renderWaypointTree() {
-        const list = document.getElementById("missionList");
-        list.innerHTML = "";
-
-        missions.forEach((mission, missionIndex) => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-      <details class="group">
-        <summary class="cursor-pointer font-semibold text-blue-700 flex justify-between items-center">
-          ${mission.name}
-          <button onclick="openBatchEditor(${missionIndex})" class="text-xs text-gray-600 hover:underline hover:text-gray-700 cursor-pointer">Batch Edit</button>
-        </summary>
-        <ul class="ml-4 mt-2 space-y-1">
-${mission.waypoints.map((wp, wpIndex) => `
-  <li class="pl-2 border-l-2 border-blue-300 text-sm flex justify-between items-center">
-    <button onclick="openWaypointEditor(${missionIndex}, ${wpIndex})" class="hover:underline flex-grow text-left">
-      Waypoint ${wp.id} — Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}
-    </button>
-    <button onclick="deleteWaypoint(${missionIndex}, ${wpIndex})" class="text-red-500 hover:text-red-700 ml-2 text-xs cursor-pointer">✖</button>
-  </li>
-`).join('')}
-
-        </ul>
-      </details>
-    `;
-            list.appendChild(li);
-        });
-    }
-
-    function deleteWaypoint(missionIndex, wpIndex) {
-        missions[missionIndex].waypoints.splice(wpIndex, 1);
-        renderWaypointTree();
-    }
-
-    function openBatchEditor(missionIndex) {
-        document.getElementById("batchEditor").classList.remove("hidden");
-        document.getElementById("batchEditor").dataset.missionIndex = missionIndex;
-    }
-
-    function closeBatchEditor() {
-        document.getElementById("batchEditor").classList.add("hidden");
-    }
-
-    // Handle batch form submission
-    const batchForm = document.getElementById("batchEditForm");
-    batchForm.addEventListener("submit", e => {
-        e.preventDefault();
-        const missionIndex = parseInt(document.getElementById("batchEditor").dataset.missionIndex);
-        const mission = missions[missionIndex];
-
-        const altitude = document.getElementById("batch-altitude").value;
-        const speed = document.getElementById("batch-speed").value;
-        const action = document.getElementById("batch-action").value;
-
-        mission.waypoints.forEach(wp => {
-            if (altitude) wp.altitude = parseFloat(altitude);
-            if (speed) wp.speed = parseFloat(speed);
-            if (action) wp.action = action;
-        });
-
-        renderWaypointTree();
-        closeBatchEditor();
-    });
-
-    renderWaypointTree();
-
-
-    let currentMissionIndex = null;
-    let currentWaypointIndex = null;
-
-    function openWaypointEditor(missionIndex, wpIndex) {
-        const wp = missions[missionIndex].waypoints[wpIndex];
-        alert(`Edit Waypoint ${wp.id} - Alt: ${wp.altitude}, Speed: ${wp.speed}, Action: ${wp.action}`);
-
-        document.getElementById("wp-altitude").value = wp.altitude;
-        document.getElementById("wp-speed").value = wp.speed;
-        document.getElementById("wp-action").value = wp.action;
-
-        document.getElementById("waypointEditor").classList.remove("hidden");
-    }
-
-    function closeWaypointEditor() {
-        document.getElementById("waypointEditor").classList.add("hidden");
-    }
-
-    // Handle single waypoint save
-    document.getElementById("waypointEditForm").addEventListener("submit", e => {
-        e.preventDefault();
-        const altitude = parseFloat(document.getElementById("wp-altitude").value);
-        const speed = parseFloat(document.getElementById("wp-speed").value);
-        const action = document.getElementById("wp-action").value;
-
-        const wp = missions[currentMissionIndex].waypoints[currentWaypointIndex];
-        wp.altitude = altitude;
-        wp.speed = speed;
-        wp.action = action;
-
-        renderWaypointTree();
-        closeWaypointEditor();
-    });
-
-</script>
-
-
 
 
 <script type="module" src="src/main.js"></script>
