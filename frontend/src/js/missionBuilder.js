@@ -1,8 +1,11 @@
 import { getMap } from "./map.js";
 import { addMissionToTree } from "./tree.js";
-// TODO: offload actual data handling from tree.js
 export const missions = [];
 
+// TODO: Editing waypoints needs close modal anim,
+// TODO: Missions are being pushed with all waypoints
+// TODO: Gimbal pitch logic add to generateKML()
+// TODO: Pan controls and heading to calculateBearing() /tree.js
 function registerMission(name, type, poi, waypoints) {
     const missionId = crypto.randomUUID();
     const timestamp = new Date().toISOString();
@@ -18,6 +21,7 @@ function registerMission(name, type, poi, waypoints) {
 
     missions.push(mission);
     addMissionToTree(mission);
+    return { mission, index: missions.length - 1 };
 }
 
 let poi = null;
@@ -52,11 +56,13 @@ getMap().then((map) => {
         const orbitCount = parseInt(document.getElementById("orbitCount").value, 10);
         const orbitRadius = parseFloat(document.getElementById("orbitRadius").value);
         const altitude = parseFloat(document.getElementById("altitude").value);
+        const poiAlt = parseFloat(document.getElementById("poi-Alt").value) ?? 1;
         const speed = parseFloat(document.getElementById("speed").value);
         const cameraAction = document.getElementById("cameraAction").value;
 
         const config = {
             poi,
+            poiAlt,
             orbitCount,
             orbitRadius,
             altitude,
@@ -110,8 +116,10 @@ missionSelect.addEventListener("change", (e) => {
 
 
 function generateOrbitMission(config, map) {
+    let newWaypoints = [];
     const {
         poi,
+        poiAlt,
         orbitCount,
         orbitRadius,
         altitude,
@@ -130,9 +138,11 @@ function generateOrbitMission(config, map) {
         const position = {
             lat: poi.lat + latOffset,
             lng: poi.lng + lngOffset,
+            alt: poiAlt ?? 0  // default to 0 if not set
         };
 
         const meta = {
+            poiAlt,
             altitude,
             speed,
             action: cameraAction,
@@ -142,29 +152,29 @@ function generateOrbitMission(config, map) {
         const marker = new google.maps.Marker({
             position,
             map,
-            label: `${waypoints.length + 1}`,
-            title: `Waypoint ${waypoints.length + 1}`,
+            label: `${newWaypoints.length + 1}`,
+            title: `Waypoint ${newWaypoints.length + 1}`,
         });
-        const index = waypoints.length; // capture current index before push
+        const index = newWaypoints.length; // capture current index before push
 
-        marker.addListener("click", () => openWaypointEditor(index));
-
-        waypoints.push({
+        newWaypoints.push({
             position,
             meta,
             marker
         });
-    }
-    registerMission(
+    }const { mission, index: missionIndex } = registerMission(
         `Orbit Mission @ ${new Date().toLocaleTimeString()}`,
         "orbit",
         poi,
-        [...waypoints]  // use deep copy
+        newWaypoints
     );
-        console.log(missions)
+    console.log(mission)
+    mission.waypoints.forEach((wp, wpIndex) => {
+        wp.marker.addListener("click", () => openWaypointEditor(missionIndex, wpIndex));
+
+    });
 
 }
-
 
 function generateGrid(center, width, height, rows, cols) {
     const waypoints = [];
@@ -287,21 +297,24 @@ function updateWaypointData() {
     console.log("Updated Waypoints:", data);
 }
 
-export function openWaypointEditor(index) {
-    const wp = waypoints[index];
-    const meta = wp.meta;
+export function openWaypointEditor(missionIndex, waypointIndex) {
+    const mission = missions[missionIndex];
+    // const wp = waypoints[waypointIndex];
+    const meta = mission.waypoints
+    console.log(mission, meta)
 
     // Update modal header
-    document.getElementById("editModalTitle").textContent = `Edit Waypoint ${index + 1}`;
+    document.getElementById("editModalTitle").textContent = `Edit Waypoint ${waypointIndex + 1}`;
 
     // Set input values
+    document.getElementById("edit-poi-altitude").value = meta.poiAlt ?? 0;
     document.getElementById("edit-altitude").value = meta.altitude;
     document.getElementById("edit-speed").value = meta.speed;
     document.getElementById("edit-action").value = meta.action;
     document.getElementById("edit-gimbal").value = meta.gimbal;
 
     // Store index for save handler
-    document.getElementById("editModal").dataset.index = index;
+    document.getElementById("editModal").dataset.index = waypointIndex;
 
     // Show modal
     document.getElementById("editModal").classList.remove("hidden");
@@ -309,9 +322,12 @@ export function openWaypointEditor(index) {
     // Save btn
     document.getElementById("editSaveBtn").addEventListener("click", () => {
         const index = parseInt(document.getElementById("editModal").dataset.index);
-        const wp = waypoints[index];
+        const mission = missions[missionIndex];
+        const wp = mission.waypoints[waypointIndex];
+        console.log("Waypoint updated ", wp)
 
         wp.meta.altitude = parseFloat(document.getElementById("edit-altitude").value);
+        wp.meta.poiAlt = parseFloat(document.getElementById("edit-poi-altitude").value);
         wp.meta.speed = parseFloat(document.getElementById("edit-speed").value);
         wp.meta.action = document.getElementById("edit-action").value;
         wp.meta.gimbal = parseFloat(document.getElementById("edit-gimbal").value);
@@ -322,7 +338,8 @@ export function openWaypointEditor(index) {
     document.getElementById("editCancelBtn").addEventListener("click", () => {
         document.getElementById("editModal").classList.add("hidden");
     });
-
+//     TODO: fix function to empty tree of duplicates
+// addMissionToTree(mission)
 }
 
 
