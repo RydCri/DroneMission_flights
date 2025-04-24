@@ -30,6 +30,9 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 <img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
 <br>
 <i>Flight Mission Demo</i>
-
-
+<br>
+<p># Update Apr 24 #</p>
+<br>
+<p>Flight plans now exportable as .kml file</p>
+<img style="height:200px;width:250px;" src="kmlEdit.png" alt="project select">
 
