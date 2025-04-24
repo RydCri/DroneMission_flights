@@ -38,8 +38,12 @@
                 <input type="number" id="orbitRadius" value="50" min="5" class="w-full border p-2 rounded" />
             </div>
             <div>
-                <label class="block text-sm font-medium">Altitude (m)</label>
+                <label class="block text-sm font-medium">Drone Altitude (m)</label>
                 <input type="number" id="altitude" value="30" class="w-full border p-2 rounded" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium">POI Altitude (m) <span class="text-sm">0 = ground level</span></label>
+                <input type="number" id="poi-Alt" value="1" class="w-full border p-2 rounded" />
             </div>
             <div>
                 <label class="block text-sm font-medium">Speed (m/s)</label>
@@ -52,11 +56,11 @@
                     <option value="video">🎥 Video</option>
                 </select>
             </div>
+        <button id="generateMissionBtn"
+                class="w-full bg-blue-600 text-white p-2 my-2 rounded hover:bg-blue-700 disabled:bg-gray-400 hover:cursor-pointer"
+                disabled>Generate Mission</button>
         </div>
 
-        <button id="generateMissionBtn"
-                class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:bg-gray-400 hover:cursor-pointer"
-                disabled>Generate Mission</button>
     </div>
 
 
@@ -64,62 +68,132 @@
 <!-- Waypoint Edit Modal -->
 <div id="editModal" class="fixed inset-0 bg-[rgb(0,0,0)]/50 flex items-center justify-center z-50 hidden">
 
-    <div class="bg-white rounded-lg p-6 w-96 shadow-lg">
+    <div class="bg-black text-white rounded-lg p-2 w-96 shadow-lg">
         <h2 id="editModalTitle" class="text-xl font-bold mb-4"></h2>
-        <form id="waypointForm" class="space-y-3">
-            <input type="hidden" id="waypointIndex" />
-            <div>
-                <label class="block text-sm font-medium">Altitude (m)</label>
-                <input type="number" id="edit-altitude" class="w-full border p-2 rounded" />
+        <div id="waypointForm" class="bg-black text-white p-2 rounded-md shadow-lg max-w-sm space-y-2">
+            <input type="hidden" id="missionIndex"/>
+            <input type="hidden" id="waypointIndex"/>
+
+                <!-- Altitude -->
+
+                <div>
+                    <label for="edit-poi-altitude" class="block text-sm font-semibold mb-1">POI Altitude (m)<span class="tx-sm">0 = ground level</span></label>
+                    <input
+                            type="number"
+                            id="edit-poi-altitude"
+                            class="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            placeholder="Target altitude"
+                            value="1"
+                    />
+                </div>
+
+                <div>
+                    <label for="edit-altitude" class="block text-sm font-semibold mb-1">Drone Altitude (m)</label>
+                    <input
+                            type="number"
+                            id="edit-altitude"
+                            class="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            placeholder="Enter drone altitude"
+                    />
+                </div>
+
+                <!-- Speed -->
+                <div>
+                    <label for="edit-speed" class="block text-sm font-semibold mb-1">Speed (m/s)</label>
+                    <input
+                            type="number"
+                            id="edit-speed"
+                            class="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                            placeholder="Enter speed"
+                    />
+                </div>
+            <div class="bg-black text-white p-4 rounded-md shadow-lg max-w-sm space-y-2">
+                <label for="edit-gimbal" class="block text-sm font-semibold">Gimbal Angle (°)</label>
+                <div class="flex items-center space-x-3">
+                    <input
+                            type="range"
+                            min="-100"
+                            max="100"
+                            value="0"
+                            id="edit-gimbal"
+                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-thumb"
+                            oninput="this.nextElementSibling.value = this.value"
+                    />
+                    <output class="w-12 text-right">auto</output>
+                </div>
+                <p class="text-xs text-gray-400">Adjust the gimbal pitch angle from -100° (down) to 100° (up).</p>
             </div>
-            <div>
-                <label class="block text-sm font-medium">Speed (m/s)</label>
-                <input type="number" id="edit-speed" class="w-full border p-2 rounded" />
-            </div>
-            <div>
-                <input type="range" min="-100" max="100" id="edit-gimbal" class="w-full border p-0 rounded" oninput="this.nextElementSibling.value = this.value"/>
-                <output>auto</output>
-                <label class="block text-sm font-medium">Gimbal Angle</label>
-            </div>
+
                 <hr>
-            <div class="bg-rgb(0,0,0)/20">
-                <label class="block text-sm font-medium">Gimbal Track POI</label>
-            <div class="radio-container">
-                <label class="mission-radio">Disable</label>
-                <input class="radio-input" type="radio" id="radio-disable">
-                <label class="mission-radio">Track</label>
-                <input class="radio-input" type="radio" id="radio-track">
-                <label class="mission-radio">Interpolate</label>
-                <input class="radio-input" type="radio" id="radio-interpolate">
+            <div class="bg-black text-white p-4 rounded-md shadow-lg max-w-sm">
+                <label class="block text-md font-semibold mb-2">Gimbal Behavior</label>
+                <form action="#" class="space-y-2" aria-label="Gimbal Tracking Options">
+
+                    <label for="radio-disable" class="flex items-center space-x-3 cursor-pointer hover:text-gray-300">
+                        <input
+                                type="radio"
+                                id="radio-disable"
+                                name="gimbal-options"
+                                value="0"
+                                class="radio-input text-black"
+                        />
+                        <span class="text-sm">Disable — Fixed gimbal, no tracking</span>
+                    </label>
+
+                    <label for="radio-track" class="flex items-center space-x-3 cursor-pointer hover:text-gray-300">
+                        <input
+                                type="radio"
+                                id="radio-track"
+                                name="gimbal-options"
+                                value="1"
+                                class="radio-input text-black"
+                                checked
+                        />
+                        <span class="text-sm">Track POI — Gimbal follows point of interest in real time</span>
+                    </label>
+
+                    <label for="radio-interpolate" class="flex items-center space-x-3 cursor-pointer hover:text-gray-300">
+                        <input
+                                type="radio"
+                                id="radio-interpolate"
+                                name="gimbal-options"
+                                value="2"
+                                class="radio-input text-black"
+                        />
+                        <span class="text-sm">Interpolate — Gimbal sweeps or transitions between POIs</span>
+                    </label>
+
+                </form>
             </div>
-            </div>
+
             <div>
-                <label class="block text-sm font-medium">Camera Action</label>
-                <select id="edit-action" class="w-full border p-2 rounded cursor-pointer">
-                    <option value="photo">Photo</option>
-                    <option value="start_video">Start Video</option>
-                    <option value="stop_video">Stop Video</option>
+                <label for="edit-action" class="block text-sm font-semibold mb-1">Camera Action</label>
+                <select id="edit-action" class="w-full bg-gray-800 text-white border border-gray-600 p-2 rounded cursor-pointer focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    <option value="photo">📸 Photo</option>
+                    <option value="start_video">🎥 Start Video</option>
+                    <option value="stop_video">🛑 Stop Video</option>
                 </select>
             </div>
             <div class="flex justify-end gap-2 mt-4">
-                <button type="button" id="editCancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 hover:cursor-pointer">Cancel</button>
-                <button id="editSaveBtn" type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hover:cursor-pointer">Save</button>
+                <button type="button" id="editCancelBtn" class="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer focus:ring-cyan-500">Cancel</button>
+                <button id="editSaveBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer focus:ring-cyan-500">Save</button>
             </div>
-        </form>
+    </div>
     </div>
 </div>
 
 <!-- Collapsible Tree Panel -->
-<div id="waypointTreeWrapper" class="fixed left-0 top-11 h-full max-w-md w-full z-10 transform transition-transform duration-300 -translate-x-full">
+<div id="waypointTreeWrapper" class="fixed left-0 top-20 h-full max-w-md w-full z-10 transform transition-transform duration-300 -translate-x-full">
     <div id="waypointTree" class="p-4 w-full h-full bg-[rgb(255,255,255)]/90 rounded-r-2xl shadow-xl overflow-y-auto">
-        <h2 class="text-xl font-bold mb-4">Mission Waypoints</h2>
+        <h2 class="text-xl font-bold mb-2">Mission Waypoints</h2>
+            <button onclick="exportMissionJSON()" class="relative hover:bg-[rgb(0,0,0)]/90 bg-[rgb(100,100,100)]/50 text-white px-3 py-1 mb-2 rounded-xs shadow-md z-50 cursor-pointer">
+                Export JSON
+            </button>
+
         <ul class="space-y-2" id="missionList">
             <!-- Missions will be injected here -->
         </ul>
     </div>
-            <button onclick="exportMissionJSON()" class="relative bottom-30 left-2 hover:bg-[rgb(0,0,0)]/90 bg-[rgb(100,100,100)]/50 text-white px-3 py-1 rounded-xs shadow-md z-50 cursor-pointer">
-                Export JSON
-            </button>
 </div>
 
 <!-- Batch Edit Panel -->
@@ -127,7 +201,11 @@
     <h3 class="text-lg font-semibold mb-2">Batch Edit</h3>
     <form id="batchEditForm" class="space-y-2">
         <div>
-            <label for="batch-altitude" class="block text-sm font-medium">Altitude (m)</label>
+            <label for="batch-poi-altitude" class="block text-sm font-medium">POI Altitude (m)<span class="tx-sm">0 = ground level</span></label>
+            <input type="number" id="batch-poi-altitude" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="batch-altitude" class="block text-sm font-medium">Drone Altitude (m)</label>
             <input type="number" id="batch-altitude" class="w-full border rounded px-2 py-1">
         </div>
         <div>
@@ -153,7 +231,11 @@
     <h3 class="text-lg font-semibold mb-2">Edit Waypoint</h3>
     <form id="waypointEditForm" class="space-y-2">
         <div>
-            <label for="wp-altitude" class="block text-sm font-medium">Altitude (m)</label>
+            <label for="wp-poi-altitude" class="block text-sm font-medium">POI Altitude (m)<span class="tx-sm">0 = ground level</span></label>
+            <input type="number" id="wp-poi-altitude" class="w-full border rounded px-2 py-1">
+        </div>
+        <div>
+            <label for="wp-altitude" class="block text-sm font-medium">Drone Altitude (m)</label>
             <input type="number" id="wp-altitude" class="w-full border rounded px-2 py-1">
         </div>
         <div>
