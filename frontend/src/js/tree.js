@@ -1,65 +1,6 @@
 import {missions, openWaypointEditor} from "./missionBuilder.js";
 import { waypoints} from "./missionBuilder.js";
 
-// Populate the collapsible tree with mission and waypoint info
-// TODO: needs missions import, Don't change this yet, decouple any direct handling eventually
-    function renderMissionTree() {
-    const missionList = document.getElementById("missionList");
-    missionList.innerHTML = "";
-
-    missions.forEach((mission, mIndex) => {
-    const missionItem = document.createElement("li");
-    missionItem.classList.add("border", "rounded", "p-2", "bg-white", "shadow");
-
-    const missionHeader = document.createElement("div");
-    missionHeader.classList.add("font-semibold", "cursor-pointer", "flex", "justify-between", "items-center");
-    missionHeader.innerHTML = `
-      <span>${mission.name}</span>
-      <button onclick="openBatchEditor(${mIndex})" class="text-xs bg-gray-300 rounded px-2 py-0.5">Batch Edit</button>
-    `;
-
-    const waypointList = document.createElement("ul");
-    waypointList.classList.add("pl-4", "mt-2", "space-y-1");
-
-    mission.waypoints.forEach((wp, wpIndex) => {
-    const wpItem = document.createElement("li");
-    wpItem.classList.add("cursor-pointer", "text-sm", "hover:underline");
-    wpItem.textContent = `Waypoint ${wp.id} - ${wp.action}`;
-    wpItem.onclick = () => openWaypointEditor(wpIndex);
-    waypointList.appendChild(wpItem);
-});
-
-    missionItem.appendChild(missionHeader);
-    missionItem.appendChild(waypointList);
-    missionList.appendChild(missionItem);
-});
-}
-
-    // Open single waypoint editor
-
-//     function openWaypointEditor(missionIndex, wpIndex) {
-//     const wp = missions[missionIndex].waypoints[wpIndex];
-//
-//     const form = document.getElementById("waypointEditForm");
-//     const editor = document.getElementById("waypointEditModal");
-//
-//     document.getElementById("wp-altitude").value = wp.meta.altitude;
-//     document.getElementById("wp-speed").value = wp.meta.speed;
-//     document.getElementById("wp-action").value = wp.meta.action;
-//
-//     form.onsubmit = (e) => {
-//         e.preventDefault();
-//         wp.meta.altitude = parseFloat(document.getElementById("wp-altitude").value);
-//         wp.meta.speed = parseFloat(document.getElementById("wp-speed").value);
-//         wp.meta.action = document.getElementById("wp-action").value;
-//
-//         editor.classList.add("hidden");
-//
-//         renderMissionTree(); // Refresh
-//     };
-//
-//     editor.classList.remove("hidden");
-// }
 
     export function closeWaypointEditor() {
     document.getElementById("waypointEditor").classList.add("hidden");
@@ -75,11 +16,13 @@ import { waypoints} from "./missionBuilder.js";
     e.preventDefault();
 
     const alt = document.getElementById("batch-altitude").value;
+    const poiAlt = document.getElementById('batch-poi-altitude').value;
     const speed = document.getElementById("batch-speed").value;
     const action = document.getElementById("batch-action").value;
 
     missions[missionIndex].waypoints.forEach(wp => {
     if (alt) wp.altitude = parseFloat(alt);
+    if (poiAlt) wp.poiAlt = parseFloat(alt);
     if (speed) wp.speed = parseFloat(speed);
     if (action) wp.action = action;
 });
@@ -92,6 +35,24 @@ import { waypoints} from "./missionBuilder.js";
     export function closeBatchEditor() {
     document.getElementById("batchEditor").classList.add("hidden");
 }
+
+    export function deleteMission(mission) {
+
+    }
+    // Download KML
+function downloadKML(mission) {
+    const kmlContent = generateKML(mission);
+    const blob = new Blob([kmlContent], { type: 'application/vnd.google-earth.kml+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${mission.name || 'mission'}.kml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 
     // Export to JSON
 export function exportMissionJSON() {
@@ -114,8 +75,102 @@ export function exportMissionJSON() {
     URL.revokeObjectURL(url);
 }
 
+// TODO: camera and bearing logic for pan flight
+export function generateKML(mission) {
+    const { name, poi, waypoints = [], altitudeMode = 'absolute' } = mission;
 
-    // Add dummy mission
+    console.log("POI", poi)
+    console.log("Mission", mission)
+    console.log(waypoints)
+    function calculateBearing(from, to) {
+        const lat1 = from.lat * Math.PI / 180;
+        const lat2 = to.lat * Math.PI / 180;
+        const deltaLng = (to.lng - from.lng) * Math.PI / 180;
+        const y = Math.sin(deltaLng) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+        const bearing = Math.atan2(y, x) * 180 / Math.PI;
+        return (bearing + 360) % 360;
+    }
+
+    const kml = [];
+    kml.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+    kml.push(`<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">`);
+    kml.push(`<Document>`);
+    kml.push(`<name>${name}</name>`);
+
+    // Line path
+    kml.push(`<Placemark><name>Flight Path</name><LineString>`);
+    kml.push(`<altitudeMode>${altitudeMode}</altitudeMode>`);
+    kml.push(`<coordinates>`);
+    waypoints.forEach(wp => {
+        kml.push(`${wp.position.lng},${wp.position.lat},${wp.meta.altitude}`);
+    });
+    kml.push(`</coordinates></LineString></Placemark>`);
+
+    // Per waypoint
+    waypoints.forEach((wp, idx) => {
+        const heading = calculateBearing(wp.position, poi);
+        const tilt = wp.meta.gimbal ?? 45;
+        const speed = wp.meta.speed ?? mission.speed ?? 5;
+        const poiAlt = wp.meta.poiAlt ?? 0;
+        const alt = wp.meta.altitude ?? 30;
+        const action = wp.meta.action ?? 'None';
+
+        kml.push(`<Placemark><name>Waypoint ${idx + 1}</name>`);
+        kml.push(`
+        <Camera>
+          <longitude>${wp.position.lng}</longitude>
+          <latitude>${wp.position.lat}</latitude>
+          <altitude>${alt}</altitude>
+          <altitudeMode>${altitudeMode}</altitudeMode>
+          <tilt>${tilt}</tilt>
+          <heading>${heading.toFixed(2)}</heading>
+        </Camera>`);
+
+        kml.push(`<ExtendedData>
+            <Data name="speed"><value>${speed}</value></Data>
+            <Data name="gimbalPitch"><value>${tilt}</value></Data>
+            <Data name="action"><value>${action}</value></Data>
+        </ExtendedData>`);
+
+        kml.push(`<Point><coordinates>${wp.position.lng},${wp.position.lat},${alt}</coordinates></Point>`);
+        kml.push(`</Placemark>`);
+    });
+
+    // Optional gx:Tour
+    kml.push(`<gx:Tour><name>${name} Tour</name><gx:Playlist>`);
+    waypoints.forEach((wp, idx) => {
+        const heading = calculateBearing(wp.position, poi);
+        const tilt = wp.meta.gimbal ?? 45;
+        const alt = wp.meta.altitude ?? 30;
+        const poiAlt = wp.meta.poiAlt ?? 0;
+        const wait = 1.5; // seconds pause at each WP
+        const action = wp.meta.action ?? 'None';
+
+        kml.push(`<gx:FlyTo><gx:duration>1.2</gx:duration><gx:flyToMode>smooth</gx:flyToMode>
+        <Camera>
+          <longitude>${wp.position.lng}</longitude>
+          <latitude>${wp.position.lat}</latitude>
+          <altitude>${alt}</altitude>
+          <altitudeMode>${altitudeMode}</altitudeMode>
+          <tilt>${tilt}</tilt>
+          <heading>${heading.toFixed(2)}</heading>
+        </Camera></gx:FlyTo>`);
+
+        // Optional simulated action: log action as a wait marker
+        if (action !== 'None') {
+            kml.push(`<gx:Wait><gx:duration>${wait}</gx:duration></gx:Wait>`);
+        }
+    });
+    kml.push(`</gx:Playlist></gx:Tour>`);
+
+    kml.push(`</Document></kml>`);
+    return kml.join('\n');
+}
+
+
+
+// Add dummy mission
     function addDummyMission() {
     const id = crypto.randomUUID().slice(0, 8);
     missions.push({
@@ -136,7 +191,29 @@ export function exportMissionJSON() {
 // };
 
     export function addMissionToTree(mission) {
-        const tree = document.getElementById("waypointTree");
+        const tree = document.getElementById("missionList");
+
+        const rightSide = document.createElement("div");
+        rightSide.classList.add("space-x-2");
+
+        const batchBtn = document.createElement("button");
+        batchBtn.textContent = "Batch Edit";
+        batchBtn.classList.add("text-xs", "bg-gray-300", "rounded", "px-2", "py-0.5");
+        batchBtn.onclick = () => openBatchEditor(mission);
+
+        const downloadBtn = document.createElement("button");
+        downloadBtn.textContent = "Download KML";
+        downloadBtn.classList.add("text-xs", "bg-blue-500", "text-white", "rounded", "px-2", "py-0.5");
+        downloadBtn.onclick = () => downloadKML(mission);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "Delete Mission";
+        deleteBtn.classList.add("text-xs", "bg-red-500", "text-white", "rounded", "px-2", "py-0.5","hover:bg-red-600");
+        deleteBtn.onclick = () => tree.removeChild(missionNode);
+
+        rightSide.appendChild(batchBtn);
+        rightSide.appendChild(downloadBtn);
+        rightSide.appendChild(deleteBtn);
 
         const missionNode = document.createElement("li");
         missionNode.className = "mission-node";
@@ -155,13 +232,12 @@ export function exportMissionJSON() {
         mission.waypoints.forEach((wp, index) => {
             const child = document.createElement("li");
             child.className = "text-sm hover:underline cursor-pointer";
-            child.textContent = `Waypoint ${index + 1} - Alt: ${wp.meta.altitude}m`;
+            child.textContent = `Waypoint ${index + 1} - Drone Alt: ${wp.meta.altitude}m - POI Alt: ${wp.meta.poiAlt}m`;
 
             child.addEventListener("click", () => {
                 wp.marker.setAnimation(google.maps.Animation.BOUNCE);
                 setTimeout(() => wp.marker.setAnimation(null), 1400);
                 wp.marker.getMap().panTo(wp.marker.getPosition());
-                openWaypointEditor(index); // from missionBuilder.js
             });
 
             childrenList.appendChild(child);
@@ -169,6 +245,7 @@ export function exportMissionJSON() {
 
         details.appendChild(childrenList);
         missionNode.appendChild(details);
+        missionNode.appendChild(rightSide);
         tree.appendChild(missionNode);
     }
 
