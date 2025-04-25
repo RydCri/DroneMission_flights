@@ -6,7 +6,12 @@ This repository tracks the development of a component for integration into the D
 <br>
 https://github.com/RydCri/DroneMission/
 <br>
-This component provides users of the webapp with tools to:
+<img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
+<br>
+<i>Flight Mission Demo</i>
+<br>
+<br>
+This app provides users of the webapp with tools to:
 <br>
 
 <ul>
@@ -19,20 +24,14 @@ This component provides users of the webapp with tools to:
 This app's focus is on generating maps, orthomosaics, and photogrammetry using FPV and gimbal camera drones.
 <br>
 <p>The app is intended for use with off-the-shelf dronekits that support mission planning through tools like DJI Pilot, QGroundControl, or Mission Planner.</p>
-<img style="height:200px;width:250px;" src="treeSearchOrbits.png" alt="project select">
+<img style="height:200px;width:250px;" src="orbitsTrees.png" alt="project select">
 <div>
-<p>Once mission is complete: collected files will be uploadable to build projects related to mission type.</p>
-<img style="height:200px;width:250px;" src="projSelect.png" alt="project select">
+<p>Build a mission and export as a .kml file, a popular format for pre-planned drone flight missions.</p>
+<img style="height:200px;width:250px;" src="kmlxml.png" alt="project select">
+<br>
+
 <br>
 <i>A single grid flight can collect photos usable for projects in basic photogrammetry like Digital Surface Models (DSM) or Digital Elevation Models (DEM)</i>
 </div>
-<br>
-<img style="height:400px;width:300px;" src="flightDemo.gif" alt="demo screen shot">
-<br>
-<i>Flight Mission Demo</i>
-<br>
-<p># Update Apr 24 #</p>
-<br>
-<p>Flight plans now exportable as .kml file</p>
 <img style="height:200px;width:250px;" src="kmlEdit.png" alt="project select">
 
