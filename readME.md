@@ -35,3 +35,9 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 </div>
 <img style="height:200px;width:250px;" src="kmlEdit.png" alt="project select">
 
+
+### Gimbal camera settings
+
+<p>Using the default camera setting will set the camera gimbal at an angle to keep the point of interest in frame during the flightpath</p>
+<p>This angle is reckoned based off the distance of the waypoint from POI, altitude of drone and altitude of POI. <i>default 1 meter</i></p>
+<img style="height:200px;width:250px;" src="tilt_vs_altitude.png" alt="gimbal angle chart">
