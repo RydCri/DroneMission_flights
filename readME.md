@@ -49,9 +49,9 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 <br>
 <p>Your drone's ability to keep a POI in frame is based off its own camera stabilization tools or a mission executor that takes your drone's IMU to compensate drone pitch with gimbal pitch.</p>
 
-| Drone Type                            | Safe Orbit Speed | Notes| 
-|---------------------------------------|------------------|-------|
-| Cine drones (DJI Mavic, Air, Phantom) | 1.5 – 4 m/s | Smooth gimbal, good stabilization|
-| FPV drones (fixed camera)             | 1 – 2 m/s | Must go slower; camera can't compensate|
-| Cinematic Look (Slow orbit)           | 0.5 – 1.5 m/s | Best for interviews, real estate|
-| Fast tracking (Dynamic action)        | 4 – 6 m/s | Requires 60fps+ capture, high gimbal skill|
+| Drone Type                            | Safe Orbit Speed | Notes                                      | 
+|---------------------------------------|------------------|--------------------------------------------|
+| Cine drones (DJI Mavic, Air, Phantom) | 1.5 – 4 m/s      | Smooth gimbal, good stabilization          |
+| FPV drones (fixed camera)             | 1 – 2 m/s        | Must go slower; camera can't compensate    |
+| Cinematic Look (Slow orbit)           | 0.5 – 1.5 m/s    | Best for interviews, real estate           |
+| Fast tracking (Dynamic action)        | 4 – 6 m/s        | Requires 60fps+ capture, high gimbal skill |
