@@ -45,7 +45,7 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 <h3>Important:</h3>
 <p>Flight .kml(s) are not dynamic and high speed can throw POI off frame between waypoints.</p>
 <p>Recommended you assume 2.5 m/s as your 'safe' speed for photogrammetry.</p>
-<img style="height:200px;width:250px;" src="./readmeScreens/drone_tilt_camera_tilt.png" alt="drone tilt angle chart">
+<img style="height:200px;width:250px;" src="readmeScreens/drone_cam_tilt.png" alt="drone tilt angle chart">
 <br>
 <p>Your drone's ability to keep a POI in frame is based off its own camera stabilization tools or a mission executor that takes your drone's IMU to compensate drone pitch with gimbal pitch.</p>
 
