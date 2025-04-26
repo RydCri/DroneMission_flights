@@ -40,7 +40,7 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 
 <p>Using the default camera setting will set the camera gimbal at an angle to keep the point of interest in frame during the flightpath</p>
 <p>This angle is reckoned based off the distance of the waypoint from POI, altitude of drone and altitude of POI. <i>default 1 meter</i></p>
-<img style="height:200px;width:250px;" src="./readmeScreens/tilt_vs_altitude.png" alt="gimbal angle chart">
+<img style="height:200px;width:250px;" src="/readmeScreens/tilt_vs_altitude.png" alt="gimbal angle chart">
 <br>
 <h3>Important:</h3>
 <p>Flight .kml(s) are not dynamic and high speed can throw POI off frame between waypoints.</p>
