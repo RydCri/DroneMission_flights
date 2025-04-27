@@ -134,11 +134,15 @@ function generateOrbitMission(config, map) {
         const angle = (i / pointsPerOrbit) * 2 * Math.PI;
         const latOffset = (orbitRadius / 111111) * Math.cos(angle);
         const lngOffset = (orbitRadius / (111111 * Math.cos(poi.lat * Math.PI / 180))) * Math.sin(angle);
+        const verticalDelta = altitude - (poiAlt ?? 0); // if none, no tilt
+        const tiltRadians = Math.atan2(orbitRadius, verticalDelta);
+        const gimbal = 90 - (tiltRadians * 180 / Math.PI);
+
 
         const position = {
             lat: poi.lat + latOffset,
             lng: poi.lng + lngOffset,
-            alt: poiAlt ?? 0  // default to 0 if not set
+            alt: poiAlt ?? 1  // default to 1 if not set
         };
 
         const meta = {
@@ -146,7 +150,7 @@ function generateOrbitMission(config, map) {
             altitude,
             speed,
             action: cameraAction,
-            gimbal: -90,
+            gimbal: gimbal.toFixed(2), // theta drone to POI
         };
 
         const marker = new google.maps.Marker({
@@ -173,7 +177,7 @@ function generateOrbitMission(config, map) {
         wp.marker.addListener("click", () => openWaypointEditor(missionIndex, wpIndex));
 
     });
-
+    openPreflightModal(analyzeOrbitMission(config))
 }
 
 function generateGrid(center, width, height, rows, cols) {
@@ -307,7 +311,7 @@ export function openWaypointEditor(missionIndex, waypointIndex) {
     document.getElementById("editModalTitle").textContent = `Edit Waypoint ${waypointIndex + 1}`;
 
     // Set input values
-    document.getElementById("edit-poi-altitude").value = meta.poiAlt ?? 0;
+    document.getElementById("edit-poi-altitude").value = meta.poiAlt ?? 1;
     document.getElementById("edit-altitude").value = meta.altitude;
     document.getElementById("edit-speed").value = meta.speed;
     document.getElementById("edit-action").value = meta.action;
@@ -340,6 +344,146 @@ export function openWaypointEditor(missionIndex, waypointIndex) {
     });
 //     TODO: fix function to empty tree of duplicates
 // addMissionToTree(mission)
+}
+
+export function analyzeOrbitMission(config) {
+    const {
+        orbitRadius,
+        orbitCount = 1,
+        speed = 2.5, // meters per second
+    } = config;
+
+    const circumference = 2 * Math.PI * orbitRadius;
+    const totalDistance = circumference * orbitCount;
+    const durationSeconds = totalDistance / speed;
+    const durationMinutes = durationSeconds / 60;
+
+    const warnings = [];
+
+    // Graded warnings
+    if (orbitRadius < 20) {
+        warnings.push({
+            level: "caution",
+            message: "Orbit radius is small (<20m). Tight turns may cause uneven footage. Consider increasing radius for smoother results."
+        });
+    }
+
+    if (speed < 1.5) {
+        warnings.push({
+            level: "critical",
+            message: "Low speed (<1.5 m/s) may increase the effect of GPS drift and wind. Verify GPS quality or consider using an RTK-equipped drone."
+        });
+    }
+
+    if (speed > 5) {
+        warnings.push({
+            level: "caution",
+            message: "High speed (>5 m/s) may cause video instability. Use higher frame rates (e.g., 60fps) or slower speeds for cinematic footage."
+        });
+    }
+
+    if (orbitCount > 3) {
+        warnings.push({
+            level: "caution",
+            message: "Multiple orbits may significantly increase battery consumption. Ensure your drone has enough battery or plan an RTH between orbits."
+        });
+    }
+
+    return {
+        totalDistance: totalDistance.toFixed(1) + ' meters',
+        durationMinutes: durationMinutes.toFixed(1) + ' minutes',
+        warnings,
+    };
+}
+
+function openPreflightModal(analysis) {
+    document.getElementById('totalDistance').textContent = analysis.totalDistance;
+    document.getElementById('flightTime').textContent = analysis.durationMinutes;
+    const advisoriesBanner = document.getElementById('advisoriesBanner')
+    const advisoriesList = document.getElementById('advisoriesList');
+    advisoriesList.innerHTML = '';
+
+
+
+    const recommendationsList = document.getElementById('recommendationsList');
+    const recommendationsBanner = document.getElementById('recommendationsBanner');
+    recommendationsList.innerHTML = '';
+
+    // Health Score Calculation
+    const healthBar = document.getElementById('healthBar');
+    const healthScore = document.getElementById('healthScore');
+
+    let score = 100;
+    let recommendations = [];
+
+
+    analysis.warnings.forEach(warning => {
+        const li = document.createElement('li');
+        li.className = 'p-2 rounded';
+
+        if (warning.level === 'critical') {
+            score -= 40;
+            li.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
+            if (warning.type === 'gps') recommendations.push({ text: 'Ensure drone has strong GPS lock or RTK module.', level: 'critical' });
+            if (warning.type === 'battery') recommendations.push({ text: 'Shorten flight path or raise speed to conserve battery.', level: 'critical' });
+        } else if (warning.level === 'caution') {
+            score -= 20;
+            li.classList.add('bg-yellow-100', 'text-yellow-800', 'border', 'border-yellow-300');
+            if (warning.type === 'speed') recommendations.push({ text: 'Increase drone speed slightly for better flight time.', level: 'caution' });
+            if (warning.type === 'altitude') recommendations.push({ text: 'Confirm altitude and terrain data are appropriate.', level: 'caution' });
+        } else {
+            li.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
+        }
+
+        li.innerHTML = `⚠️ ${warning.message}`;
+        advisoriesList.appendChild(li);
+    });
+
+    // Clamp score between 0-100
+    score = Math.max(0, Math.min(100, score));
+
+    healthBar.style.width = `${score}%`;
+    if (score >= 80) {
+        healthBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500';
+    } else if (score >= 50) {
+        healthBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-yellow-500';
+    } else {
+        healthBar.className = 'shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-red-500';
+    }
+    healthScore.textContent = `${score}% Ready`;
+
+    // Show recommendations if health is low
+    if (score <= 80) {
+        advisoriesBanner.innerHTML = 'Advisories:'
+        const uniqueRecommendations = [];
+        const seen = new Set();
+        recommendations.forEach(action => {
+            if (!seen.has(action.text)) {
+                seen.add(action.text);
+                uniqueRecommendations.push(action);
+            }
+        });
+
+        uniqueRecommendations.forEach(action => {
+            const rec = document.createElement('li');
+            rec.className = 'p-2 rounded';
+
+            if (action.level === 'critical') {
+                rec.classList.add('bg-red-50', 'text-red-600', 'border', 'border-red-200');
+            } else if (action.level === 'caution') {
+                rec.classList.add('bg-yellow-50', 'text-yellow-600', 'border', 'border-yellow-200');
+            } else {
+                rec.classList.add('bg-green-50', 'text-green-600', 'border', 'border-green-200');
+            }
+
+            rec.textContent = `👉 ${action.text}`;
+            recommendationsList.appendChild(rec);
+            recommendationsBanner.textContent = 'Recommended Actions:';
+
+        });
+    }
+
+    document.getElementById('preflightModal').classList.remove('hidden');
 }
 
 
