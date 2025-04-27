@@ -27,13 +27,14 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 <img style="height:200px;width:250px;" src="./readmeScreens/orbitsTrees.png" alt="project select">
 <div>
 <p>Build a mission and export as a .kml file, a popular format for pre-planned drone flight missions.</p>
-<img style="height:200px;width:250px;" src="./readmeScreens/kmlxml.png" alt="project select">
+<img style="height:200px;width:250px;" src="./readmeScreens/flightCheck.png" alt="flight check">
+<img style="height:200px;width:250px;" src="./readmeScreens/kmlxml.png" alt="KML output">
 <br>
 
 <br>
 <i>A single grid flight can collect photos usable for projects in basic photogrammetry like Digital Surface Models (DSM) or Digital Elevation Models (DEM)</i>
-</div>
 <img style="height:200px;width:250px;" src="./readmeScreens/kmlEdit.png" alt="project select">
+</div>
 
 
 ### Gimbal camera settings
