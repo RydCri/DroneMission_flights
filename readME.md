@@ -33,8 +33,8 @@ This app's focus is on generating maps, orthomosaics, and photogrammetry using F
 
 <br>
 <i>A single grid flight can collect photos usable for projects in basic photogrammetry like Digital Surface Models (DSM) or Digital Elevation Models (DEM)</i>
-<img style="height:200px;width:250px;" src="./readmeScreens/kmlEdit.png" alt="project select">
 </div>
+<img style="height:200px;width:250px;" src="./readmeScreens/kmlEdit.png" alt="project select">
 
 
 ### Gimbal camera settings
