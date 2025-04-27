@@ -9,9 +9,52 @@
 </head>
 <body class="">
 <div id="map" class="w-full h-screen absolute inset-0 z-0 overflow-visible"></div>
+        <!--Preflight check-->
+<!-- Preflight Health Check Modal -->
+<div id="preflightModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg w-96 p-6">
+        <h2 class="text-xl font-semibold mb-4 text-center">🛩️ Mission Health Check</h2>
+        <div class="mb-4 text-center">
+            <p><strong>Mission Readiness:</strong></p>
+            <div class="relative pt-1">
+                <div class="overflow-hidden h-4 mb-2 text-xs flex rounded bg-gray-200">
+                    <div id="healthBar" style="width: 100%;" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
+                </div>
+                <p id="healthScore" class="text-sm font-semibold"></p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <p><strong>Total Distance:</strong> <span id="totalDistance">...</span></p>
+            <p><strong>Estimated Flight Time:</strong> <span id="flightTime">...</span></p>
+        </div>
+
+        <div class="mb-4">
+            <h3 id="advisoriesBanner" class="text-lg font-semibold mb-2"></h3>
+            <ul id="advisoriesList" class="space-y-2">
+                <!-- Warnings will be inserted here dynamically -->
+            </ul>
+        </div>
+        <div class="mt-6">
+            <p><strong id="recommendationsBanner"></strong></p>
+            <ul id="recommendationsList" class="list-disc list-inside text-sm text-gray-700 mt-2 space-y-1"></ul>
+        </div>
+
+
+        <button onclick="closePreflightModal()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded cursor-pointer w-full">
+            Close
+        </button>
+    </div>
+</div>
+
+
+
 
     <!-- Sidebar: Mission Config Panel -->
     <div id="mission-controls" class="absolute p-4 left-0 top-20 w-70 h-full bg-[rgb(255,255,255)]/90 rounded shadow-xl overflow-y-auto transform transition-transform duration-300 -translate-x-full">
+
+
+
         <h2 class="text-lg font-semibold">Mission Setup</h2>
 
         <div>
@@ -257,5 +300,10 @@
 
 
 <script type="module" src="src/main.js"></script>
+<script>
+    function closePreflightModal() {
+        document.getElementById('preflightModal').classList.add('hidden');
+    }
+</script>
 </body>
 </html>
