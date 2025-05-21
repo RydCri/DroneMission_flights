@@ -1,9 +1,14 @@
-from flask import Blueprint, request, send_file
+from datetime import datetime, timezone
+from flask import Blueprint, request, send_file, jsonify
 import tempfile, os
+from flask_login import current_user, login_required
 from simplekml import Kml
 import zipfile
+from .. import db
+from ..models import FlightKML, Flight
 
 export = Blueprint('export', __name__)
+
 
 @export.route('/export', methods=['POST'])
 def export_wayline():
@@ -33,3 +38,39 @@ def export_wayline():
             return send_file(kmz_path, as_attachment=True)
         else:
             return send_file(kml_path, as_attachment=True)
+
+
+@export.route('/save_flight_data', methods=['POST'])
+@login_required
+def save_flight_data():
+    data = request.get_json()
+
+    flight_id = data.get('flight_id')
+    kml_content = data.get('kml_content')
+    json_content = data.get('json_content')
+
+    if not flight_id or not kml_content or not json_content:
+        return jsonify({'error': 'Missing flight ID or content'}), 400
+
+    # Check if the flight belongs to the logged-in user
+    flight = Flight.query.filter_by(id=flight_id, user_id=current_user.id).first()
+    if not flight:
+        return jsonify({'error': 'Flight not found or unauthorized'}), 404
+
+    # Optional: Overwrite existing or create new
+    existing = FlightKML.query.filter_by(flight_id=flight.id).first()
+    if existing:
+        existing.kml_content = kml_content
+        existing.json_content = json_content
+        existing.created_at = datetime.now(timezone.utc)
+    else:
+        new_flight_data = FlightKML(
+            flight_id=flight.id,
+            kml_content=kml_content,
+            json_content=json_content,
+            created_at=datetime.now(timezone.utc)
+        )
+        db.session.add(new_flight_data)
+
+    db.session.commit()
+    return jsonify({'message': 'Flight data saved successfully'}), 200
